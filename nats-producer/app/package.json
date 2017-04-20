@@ -1,0 +1,20 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc && echo built"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^7.0.13",
+    "tslint": "^5.1.0",
+    "typescript": "^2.2.2"
+  },
+  "dependencies": {
+    "nats": "^0.7.16"
+  }
+}
