@@ -7,10 +7,8 @@ const app = express();
 app.get("/:queue", (req, res) => {
   const queue = req.params.queue;
 
-  console.log(`flagging ${queue} to be populated with a pong`);
   client.publish("queues", queue);
 
-  console.log(`waiting for ping on: ${queue}`);
   const sId = client.subscribe(queue, (msg) => {
     res.send(`received ${msg} on queue ${queue}`);
     client.unsubscribe(sId);
