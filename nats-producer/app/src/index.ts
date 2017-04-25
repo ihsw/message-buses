@@ -22,5 +22,16 @@ client.subscribe("queueWaiting", (msg) => {
   }
 });
 
+client.subscribe("queueBloating", (msg) => {
+  const req = JSON.parse(msg);
+  const queue = req.queue;
+  const length = Number(req.length);
+
+  client.publish(queue, "0".repeat(length * 1000));
+});
+
+// error handling
+client.on("error", (err: NATS.NatsError) => console.error(err.message));
+
 // indicating activity
 console.log("Subscribed to queues");

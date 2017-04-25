@@ -76,5 +76,48 @@ app.get("/:queue/count/:count", (req, res) => {
   });
 });
 
+app.get("/:queue/bloat/:length", (req, res) => {
+  res.setHeader("content-type", "text/plain");
+
+  // parsing params
+  const queue = req.params.queue;
+  const length = Number(req.params.length);
+
+  // flagging a new queue to have messages of size X thousand zeroes
+  client.publish("queueBloating", JSON.stringify({ length: length, queue: queue }));
+
+  // setting up a full request timeout
+  const timeout = 5 * 1000;
+  const tId = setTimeout(() => {
+    if (res.headersSent) {
+      return;
+    }
+
+    res.send("Request timeout!");
+  }, timeout);
+
+  // starting up a subscriber waiting for a bloated message
+  const sId = client.subscribe(queue, (msg) => {
+    res.write(`${msg}\n`);
+
+    client.unsubscribe(sId);
+    clearTimeout(tId);
+    res.end();
+  });
+
+  // setting a timeout on the subscription
+  client.timeout(sId, timeout, 0, () => {
+    if (res.headersSent) {
+      return;
+    }
+
+    clearTimeout(tId);
+    res.send("Queue timeout!");
+  });
+});
+
+// error handling
+client.on("error", (err: NATS.NatsError) => console.error(err.message));
+
 // indicating activity
 app.listen(appPort, () => console.log(`Listening on ${appPort}`));
