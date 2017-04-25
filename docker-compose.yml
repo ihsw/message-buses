@@ -32,11 +32,6 @@ services:
     network_mode: host
     ports:
     - "4222:4222"
-  nats-top:
-    image: byrnedo/nats-top
-    network_mode: host
-    depends_on:
-    - nats-server
   nats-producer:
     build: ./nats-producer
     depends_on:
@@ -51,6 +46,7 @@ services:
     build: ./nats-consumer
     depends_on:
     - nats-server
+    - nats-producer
     network_mode: host
     ports:
     - "80:80"

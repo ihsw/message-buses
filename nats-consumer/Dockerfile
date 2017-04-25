@@ -6,7 +6,7 @@ COPY ./app $APP_DIR
 WORKDIR $APP_DIR
 
 # build app
-# RUN npm install -s \
-  # && npm run -s build
+RUN npm install -s \
+  && npm run -s build
 
 CMD ["./bin/run-app"]
