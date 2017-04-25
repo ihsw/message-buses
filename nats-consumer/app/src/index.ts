@@ -54,15 +54,13 @@ app.get("/:queue/count/:count", (req, res) => {
 
   // starting up a subscriber waiting for messages
   let messageCount = 0;
-  let messages: any[] = [];
   const sId = client.subscribe(queue, (msg) => {
-    messages.push(msg);
+    res.write(`${msg}\n`);
 
     if (++messageCount === count) {
       client.unsubscribe(sId);
       clearTimeout(tId);
-
-      res.send(`received:\n${messages.join("\n")}`);
+      res.end();
     }
   });
 
