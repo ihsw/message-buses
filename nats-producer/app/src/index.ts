@@ -27,21 +27,15 @@ client.subscribe("queueBloating", (msg) => {
   const req = JSON.parse(msg);
   const queue = req.queue;
   const length = Number(req.length);
-  const gzip = Boolean(req.gzip);
 
   const payload = "0".repeat(length * 1000);
-  if (!gzip) {
-    client.publish(queue, payload);
-    return;
-  }
-
   zlib.gzip(Buffer.from(payload), (err, buf) => {
     if (err) {
       console.error(err);
       return;
     }
 
-    client.publish(queue, buf);
+    client.publish(queue, buf.toString("base64"));
   });
 });
 
