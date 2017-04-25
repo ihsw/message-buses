@@ -9,4 +9,4 @@ WORKDIR $APP_DIR
 RUN npm install -s \
   && npm run -s build
 
-CMD ["node", "."]
+CMD ["./bin/run-app"]

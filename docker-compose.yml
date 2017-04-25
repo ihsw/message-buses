@@ -3,37 +3,59 @@ version: '3'
 services:
   kafka-zookeeper:
     image: wurstmeister/zookeeper
+    network_mode: host
     ports:
     - "2181:2181"
   kafka-server:
+    depends_on:
+    - kafka-zookeeper
     image: wurstmeister/kafka
+    network_mode: host
     ports:
     - "9092:9092"
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
     environment:
     - KAFKA_ADVERTISED_HOST_NAME=192.168.99.100
     - KAFKA_ZOOKEEPER_CONNECT=kafka-zookeeper:2181
-    volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
-    depends_on:
-    - kafka-zookeeper
   kafka-producer:
     build: ./kafka-producer
+    network_mode: host
   kafka-consumer:
     build: ./kafka-consumer
+    network_mode: host
     ports:
     - "80:80"
 
   nats-server:
     image: nats
+    network_mode: host
     ports:
     - "4222:4222"
-  nats-producer:
-    build: ./nats-producer
-    volumes:
-    - ./nats-producer/app:/srv/app
+  nats-top:
+    image: byrnedo/nats-top
+    network_mode: host
     depends_on:
     - nats-server
+  nats-producer:
+    build: ./nats-producer
+    depends_on:
+    - nats-server
+    network_mode: host
+    environment:
+    - NATS_HOST=localhost
+    - NATS_PORT=4222
+    volumes:
+    - ./nats-producer/app:/srv/app
   nats-consumer:
     build: ./nats-consumer
+    depends_on:
+    - nats-server
+    network_mode: host
     ports:
     - "80:80"
+    environment:
+    - NATS_HOST=localhost
+    - NATS_PORT=4222
+    volumes:
+    - ./nats-consumer/app:/srv/app
