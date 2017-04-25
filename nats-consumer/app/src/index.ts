@@ -41,10 +41,13 @@ app.get("/:queue/:count", (req, res) => {
   client.publish("queueWaiting", JSON.stringify({ count: count, queue: queue }));
 
   // setting up a full request timeout
-  const timeout = 5 * 1000;
+  const timeout = 0.5 * 1000;
   const tId = setTimeout(() => {
-    res.write("Full request timeout!");
-    res.end();
+    if (res.headersSent) {
+      return;
+    }
+
+    res.send("Full request timeout!");
   }, timeout);
 
   // starting up a subscriber waiting for messages
@@ -63,6 +66,10 @@ app.get("/:queue/:count", (req, res) => {
 
   // setting a timeout on the subscription
   client.timeout(sId, timeout, 0, () => {
+    if (res.headersSent) {
+      return;
+    }
+
     clearTimeout(tId);
     res.send("Queue timeout!");
   });
