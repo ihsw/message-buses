@@ -20,6 +20,8 @@ app.get("/timeout", (_, res) => {
   client.timeout(sId, 5 * 1000, 0, (timeoutSid) => res.send(`Timed out with sid ${timeoutSid}!`));
 });
 
+app.get("/subscribers", (_, res) => res.send(client.numSubscriptions()));
+
 app.get("/:queue", (req, res) => {
   const queue = req.params.queue;
 
@@ -41,7 +43,7 @@ app.get("/:queue/:count", (req, res) => {
   client.publish("queueWaiting", JSON.stringify({ count: count, queue: queue }));
 
   // setting up a full request timeout
-  const timeout = 0.5 * 1000;
+  const timeout = 5 * 1000;
   const tId = setTimeout(() => {
     if (res.headersSent) {
       return;
