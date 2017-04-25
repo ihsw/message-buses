@@ -40,18 +40,34 @@ app.get("/:queue/:count", (req, res) => {
   // flagging a new queue to have X messages published
   client.publish("queueWaiting", JSON.stringify({ count: count, queue: queue }));
 
+  // setting up a full request timeout
+  const timeout = 5 * 1000;
+  const tId = setTimeout(() => {
+    res.write("Full request timeout!");
+    res.end();
+  }, timeout);
+
   // starting up a subscriber waiting for messages
   let messageCount = 0;
-  const sId = client.subscribe(queue, <NATS.SubscribeOptions>{ max: 1 }, (msg) => {
-    res.write(msg);
+  let messages: any[] = [];
+  const sId = client.subscribe(queue, (msg) => {
+    console.log(`received ${msg} at ${messageCount}`);
+    messages.push(msg);
+
     if (++messageCount === count) {
       client.unsubscribe(sId);
+      clearTimeout(tId);
+
+      res.send(`received:\n${messages.join("\n")}`);
       res.end();
     }
   });
 
   // setting a timeout on the subscription
-  client.timeout(sId, 5 * 1000, 0, () => res.send("Timed out!"));
+  client.timeout(sId, timeout, 0, () => {
+    clearTimeout(tId);
+    res.send("Queue timeout!");
+  });
 });
 
 // indicating activity
