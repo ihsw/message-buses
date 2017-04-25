@@ -4,6 +4,10 @@ import * as express from "express";
 
 const client = NATS.connect(`nats://${process.env["NATS_HOST"]}:${process.env["NATS_PORT"]}`);
 const app = express();
+app.get("/timeout", (_, res) => {
+  const sId = client.subscribe("invalid-queue", () => { return; });
+  client.timeout(sId, 5 * 1000, 5, (timeoutSid) => res.send(`Timed out with sid ${timeoutSid}!`));
+});
 app.get("/:queue", (req, res) => {
   const queue = req.params.queue;
 
