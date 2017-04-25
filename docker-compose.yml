@@ -53,5 +53,6 @@ services:
     environment:
     - NATS_HOST=localhost
     - NATS_PORT=4222
+    - APP_PORT=80
     volumes:
     - ./nats-consumer/app:/srv/app

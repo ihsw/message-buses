@@ -2,12 +2,24 @@ import * as process from "process";
 import * as NATS from "nats";
 import * as express from "express";
 
-const client = NATS.connect(`nats://${process.env["NATS_HOST"]}:${process.env["NATS_PORT"]}`);
+// parsing env vars
+const natsHost = process.env["NATS_HOST"];
+const natsPort = Number(process.env["NATS_PORT"]);
+const appPort = Number(process.env["APP_PORT"]);
+
+// connecting
+const client = NATS.connect(`nats://${natsHost}:${natsPort}`);
+console.log(`Connected to NATS server ${natsHost}:${natsPort}`);
+
+// setting up an express app
 const app = express();
+
+// setting up routes
 app.get("/timeout", (_, res) => {
   const sId = client.subscribe("invalid-queue", () => { return; });
-  client.timeout(sId, 5 * 1000, 5, (timeoutSid) => res.send(`Timed out with sid ${timeoutSid}!`));
+  client.timeout(sId, 5 * 1000, 0, (timeoutSid) => res.send(`Timed out with sid ${timeoutSid}!`));
 });
+
 app.get("/:queue", (req, res) => {
   const queue = req.params.queue;
 
@@ -18,4 +30,29 @@ app.get("/:queue", (req, res) => {
     client.unsubscribe(sId);
   });
 });
-app.listen(80, () => console.log(`Listening on 80`));
+
+app.get("/:queue/:count", (req, res) => {
+  res.setHeader("content-type", "text/plain");
+
+  const queue = req.params.queue;
+  const count = Number(req.params.count);
+
+  // flagging a new queue to have X messages published
+  client.publish("queueWaiting", JSON.stringify({ count: count, queue: queue }));
+
+  // starting up a subscriber waiting for messages
+  let messageCount = 0;
+  const sId = client.subscribe(queue, <NATS.SubscribeOptions>{ max: 1 }, (msg) => {
+    res.write(msg);
+    if (++messageCount === count) {
+      client.unsubscribe(sId);
+      res.end();
+    }
+  });
+
+  // setting a timeout on the subscription
+  client.timeout(sId, 5 * 1000, 0, () => res.send("Timed out!"));
+});
+
+// indicating activity
+app.listen(appPort, () => console.log(`Listening on ${appPort}`));
