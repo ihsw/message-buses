@@ -1,6 +1,7 @@
 import * as process from "process";
 import * as NATS from "nats";
 import * as express from "express";
+import * as zlib from "zlib";
 
 // parsing env vars
 const natsHost = process.env["NATS_HOST"];
@@ -79,12 +80,17 @@ app.get("/:queue/count/:count", (req, res) => {
 app.get("/:queue/bloat/:length", (req, res) => {
   res.setHeader("content-type", "text/plain");
 
-  // parsing params
+  // parsing params and headers
   const queue = req.params.queue;
   const length = Number(req.params.length);
+  const gzip = req.header("accept-encoding") === "gzip";
 
   // flagging a new queue to have messages of size X thousand zeroes
-  client.publish("queueBloating", JSON.stringify({ length: length, queue: queue }));
+  client.publish("queueBloating", JSON.stringify({
+    gzip: gzip,
+    length: length,
+    queue: queue
+  }));
 
   // setting up a full request timeout
   const timeout = 5 * 1000;
@@ -97,12 +103,32 @@ app.get("/:queue/bloat/:length", (req, res) => {
   }, timeout);
 
   // starting up a subscriber waiting for a bloated message
-  const sId = client.subscribe(queue, (msg) => {
-    res.write(`${msg}\n`);
+  const sId = client.subscribe(queue, (msg: string) => {
+    const end = () => {
+      client.unsubscribe(sId);
+      clearTimeout(tId);
+      res.end();
+    };
+    const buf = Buffer.from(msg);
 
-    client.unsubscribe(sId);
-    clearTimeout(tId);
-    res.end();
+    if (!gzip) {
+      zlib.gzip(buf, (err, result) => {
+        if (err) {
+          res.write(err.message);
+          return end();
+        }
+
+        res.setHeader("content-encoding", "gzip");
+        res.write(result);
+        end();
+      });
+
+      return;
+    }
+
+    res.setHeader("content-encoding", "gzip");
+    res.write(buf);
+    end();
   });
 
   // setting a timeout on the subscription

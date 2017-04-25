@@ -1,5 +1,6 @@
 import * as NATS from "nats";
 import * as process from "process";
+import * as zlib from "zlib";
 
 // parsing env vars
 const natsHost = process.env["NATS_HOST"];
@@ -26,8 +27,22 @@ client.subscribe("queueBloating", (msg) => {
   const req = JSON.parse(msg);
   const queue = req.queue;
   const length = Number(req.length);
+  const gzip = Boolean(req.gzip);
 
-  client.publish(queue, "0".repeat(length * 1000));
+  const payload = "0".repeat(length * 1000);
+  if (!gzip) {
+    client.publish(queue, payload);
+    return;
+  }
+
+  zlib.gzip(Buffer.from(payload), (err, buf) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+
+    client.publish(queue, buf);
+  });
 });
 
 // error handling
