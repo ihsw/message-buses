@@ -31,7 +31,7 @@ client.subscribe("queueBloating", (msg) => {
 });
 
 // error handling
-client.on("error", (err: NATS.NatsError) => console.error(err.message));
+client.on("error", (err: NATS.NatsError) => console.error(`${err.code}: ${err.message}`));
 
 // indicating activity
 console.log("Subscribed to queues");

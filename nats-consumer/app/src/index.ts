@@ -50,7 +50,7 @@ app.get("/:queue/count/:count", (req, res) => {
       return;
     }
 
-    res.send("Full request timeout!");
+    res.send("Request timeout!");
   }, timeout);
 
   // starting up a subscriber waiting for messages
@@ -117,7 +117,7 @@ app.get("/:queue/bloat/:length", (req, res) => {
 });
 
 // error handling
-client.on("error", (err: NATS.NatsError) => console.error(err.message));
+client.on("error", (err: NATS.NatsError) => console.error(`${err.code}: ${err.message}`));
 
 // indicating activity
 app.listen(appPort, () => console.log(`Listening on ${appPort}`));
