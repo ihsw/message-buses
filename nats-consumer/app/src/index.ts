@@ -33,7 +33,7 @@ app.get("/:queue", (req, res) => {
   });
 });
 
-app.get("/:queue/:count", (req, res) => {
+app.get("/:queue/count/:count", (req, res) => {
   res.setHeader("content-type", "text/plain");
 
   const queue = req.params.queue;
