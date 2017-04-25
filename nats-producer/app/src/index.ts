@@ -18,7 +18,7 @@ client.subscribe("queueWaiting", (msg) => {
   const count = Number(req.count);
 
   for (let i = 0; i < count; i++) {
-    client.publish(queue, "Pong");
+    client.publish(queue, `Pong #${i}`);
   }
 });
 
