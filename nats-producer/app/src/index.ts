@@ -3,8 +3,8 @@ import * as process from "process";
 
 const client = NATS.connect(`nats://${process.env["NATS_HOST"]}:${process.env["NATS_PORT"]}`);
 
-for (let i = 0; i < 10; i++) {
-  client.publish("foo", `Hello, world #${i}!`);
-}
-
-client.close();
+console.log("waiting for pings");
+client.subscribe("queues", (msg) => {
+  console.log(`responding to ping on ${msg}`);
+  client.publish(msg, "Pong");
+});
