@@ -51,7 +51,6 @@ app.get("/:queue/:count", (req, res) => {
   let messageCount = 0;
   let messages: any[] = [];
   const sId = client.subscribe(queue, (msg) => {
-    console.log(`received ${msg} at ${messageCount}`);
     messages.push(msg);
 
     if (++messageCount === count) {
@@ -59,7 +58,6 @@ app.get("/:queue/:count", (req, res) => {
       clearTimeout(tId);
 
       res.send(`received:\n${messages.join("\n")}`);
-      res.end();
     }
   });
 
