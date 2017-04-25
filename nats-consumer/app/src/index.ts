@@ -36,6 +36,7 @@ app.get("/:queue", (req, res) => {
 app.get("/:queue/count/:count", (req, res) => {
   res.setHeader("content-type", "text/plain");
 
+  // parsing params
   const queue = req.params.queue;
   const count = Number(req.params.count);
 
