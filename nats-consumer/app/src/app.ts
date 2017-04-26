@@ -9,8 +9,19 @@ export default (client: NATS.Client): express.Application => {
 
   // setting up routes
   app.get("/timeout", (_, res) => {
+    // setting up a full request timeout
+    const timeout = 5 * 1000;
+    const tId = setTimeout(() => {
+      if (res.headersSent) {
+        return;
+      }
+
+      res.send("Request timeout!");
+    }, timeout);
+
     const sId = client.subscribe("invalid-queue", () => { return; });
-    client.timeout(sId, 5 * 1000, 0, (timeoutSid) => {
+    client.timeout(sId, timeout, 0, (timeoutSid) => {
+      clearTimeout(tId);
       res.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .send(`Timed out with sid ${timeoutSid}!`);
     });
@@ -19,13 +30,38 @@ export default (client: NATS.Client): express.Application => {
   app.get("/subscribers", (_, res) => res.send(client.numSubscriptions()));
 
   app.get("/:queue", (req, res) => {
+    res.setHeader("content-type", "text/plain");
+
+    // parsing params
     const queue = req.params.queue;
 
+    // flagging a new queue to have a message published
     client.publish("queues", queue);
 
+    // setting up a full request timeout
+    const timeout = 5 * 1000;
+    const tId = setTimeout(() => {
+      if (res.headersSent) {
+        return;
+      }
+
+      res.send("Request timeout!");
+    }, timeout);
+
     const sId = client.subscribe(queue, (msg) => {
-      res.send(`received ${msg} on queue ${queue}`);
       client.unsubscribe(sId);
+      clearTimeout(tId);
+      res.send(msg);
+    });
+
+    // setting a timeout on the subscription
+    client.timeout(sId, timeout, 0, () => {
+      if (res.headersSent) {
+        return;
+      }
+
+      clearTimeout(tId);
+      res.send("Queue timeout!");
     });
   });
 
