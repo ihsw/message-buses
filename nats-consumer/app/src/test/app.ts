@@ -68,8 +68,8 @@ test("Bloat queue route should take a 50x bloated message and return with 200 (n
           return reject(err);
         }
 
-        t.is(res.status, HttpStatus.OK, "Status was OK");
-        t.is(res.text.length, length * 1000, "Response was appropriate number of zeroes");
+        t.is(res.status, HttpStatus.OK, `Status was not OK: ${res.text}`);
+        t.is(res.text.length, length * 1000, "Response was not appropriate number of zeroes");
         resolve();
       });
   });
@@ -86,8 +86,8 @@ test("Bloat queue route should take a 50x bloated message and return with 200 (g
           return reject(err);
         }
 
-        t.is(res.status, HttpStatus.OK, "Status was OK");
-        t.is(res.text.length, length * 1000, "Response was appropriate number of zeroes");
+        t.is(res.status, HttpStatus.OK, `Status was not OK: ${res.text}`);
+        t.is(res.text.length, length * 1000, "Response was not appropriate number of zeroes");
         resolve();
       });
   });
