@@ -3,14 +3,12 @@ version: '3'
 services:
   kafka-zookeeper:
     image: wurstmeister/zookeeper
-    network_mode: host
     ports:
     - "2181:2181"
   kafka-server:
     depends_on:
     - kafka-zookeeper
     image: wurstmeister/kafka
-    network_mode: host
     ports:
     - "9092:9092"
     volumes:
@@ -20,23 +18,19 @@ services:
     - KAFKA_ZOOKEEPER_CONNECT=kafka-zookeeper:2181
   kafka-producer:
     build: ./kafka-producer
-    network_mode: host
   kafka-consumer:
     build: ./kafka-consumer
-    network_mode: host
     ports:
     - "80:80"
 
   nats-server:
     image: nats
-    network_mode: host
     ports:
     - "4222:4222"
   nats-producer:
     build: ./nats-producer
     depends_on:
     - nats-server
-    network_mode: host
     environment:
     - NATS_HOST=localhost
     - NATS_PORT=4222
@@ -47,7 +41,6 @@ services:
     depends_on:
     - nats-server
     - nats-producer
-    network_mode: host
     ports:
     - "80:80"
     environment:
