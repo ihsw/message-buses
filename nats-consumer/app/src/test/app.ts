@@ -38,3 +38,19 @@ test("Queue route should return with 200", (t) => {
       });
   });
 });
+
+test("Count queue route should take 500 messages and return with 200", (t) => {
+  return new Promise<void>((resolve, reject) => {
+    supertest(app)
+      .get("/test-name/count/500")
+      .expect(HttpStatus.OK)
+      .end((err: Error) => {
+        if (err) {
+          return reject(err);
+        }
+
+        t.pass();
+        resolve();
+      });
+  });
+});
