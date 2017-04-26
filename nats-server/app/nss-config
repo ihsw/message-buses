@@ -3,5 +3,5 @@ store: "file"
 dir: "/srv/app/storage"
 
 store_limits: {
-    max_age: "0"
+    max_age: "0s"
 }
