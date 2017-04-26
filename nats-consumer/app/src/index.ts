@@ -1,15 +1,14 @@
 import * as process from "process";
 import * as NATS from "nats";
 import getApp from "./app";
+import getNatsClient from "./nats-client";
 
 // parsing env vars
-const natsHost = process.env["NATS_HOST"];
-const natsPort = Number(process.env["NATS_PORT"]);
 const appPort = Number(process.env["APP_PORT"]);
 
 // connecting
-const client = NATS.connect(`nats://${natsHost}:${natsPort}`);
-console.log(`Connected to NATS server ${natsHost}:${natsPort}`);
+const client = getNatsClient(process.env);
+console.log("Connected to NATS server");
 
 // generating an app
 const app = getApp(client);
