@@ -1,0 +1,7 @@
+id: "ecp4"
+store: "file"
+dir: "/srv/app/storage"
+
+store_limits: {
+    max_age: "0"
+}

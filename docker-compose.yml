@@ -24,7 +24,7 @@ services:
     - "80:80"
 
   nats-server:
-    image: nats-streaming
+    build: ./nats-server
     ports:
     - "4222:4222"
   nats-producer:
