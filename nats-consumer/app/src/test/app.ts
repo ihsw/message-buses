@@ -1,11 +1,14 @@
 import { test } from "ava";
 import * as supertest from "supertest";
 import * as HttpStatus from "http-status";
+import * as uuid from "uuid";
 import getApp from "../app";
 import getNatsClient from "../nats-client";
 
 const client = getNatsClient(process.env);
 const app = getApp(client);
+
+const getUniqueRouteName = (name: string): string => `${name}-${uuid.v4()}`;
 
 test("Timeout route should fail with 500", (t) => {
   return new Promise<void>((resolve, reject) => {
@@ -26,7 +29,7 @@ test("Timeout route should fail with 500", (t) => {
 test("Queue route should return with 200", (t) => {
   return new Promise<void>((resolve, reject) => {
     supertest(app)
-      .get("/test-name")
+      .get(`/${getUniqueRouteName("test-name")}`)
       .expect(HttpStatus.OK)
       .end((err: Error) => {
         if (err) {
@@ -42,7 +45,7 @@ test("Queue route should return with 200", (t) => {
 test("Count queue route should take 500 messages and return with 200", (t) => {
   return new Promise<void>((resolve, reject) => {
     supertest(app)
-      .get("/test-name/count/500")
+      .get(`/${getUniqueRouteName("test-name")}/count/500`)
       .expect(HttpStatus.OK)
       .end((err: Error) => {
         if (err) {
@@ -59,7 +62,7 @@ test("Bloat queue route should take a 50x bloated message and return with 200", 
   return new Promise<void>((resolve, reject) => {
     const length = 50;
     supertest(app)
-      .get(`/test-name/bloat/${length}`)
+      .get(`/${getUniqueRouteName("test-name")}/bloat/${length}`)
       .end((err: Error, res: supertest.Response) => {
         if (err) {
           return reject(err);
