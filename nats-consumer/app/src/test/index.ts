@@ -7,7 +7,7 @@ import getNatsClient from "../nats-client";
 const client = getNatsClient(process.env);
 const app = getApp(client);
 
-test("Timeout route should fail with 500", async () => {
+test("Timeout route should fail with 500", async (t) => {
   return new Promise<void>((resolve, reject) => {
     supertest(app)
       .get("/timeout")
@@ -17,6 +17,7 @@ test("Timeout route should fail with 500", async () => {
           return reject(err);
         }
 
+        t.pass();
         resolve();
       });
   });
