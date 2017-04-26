@@ -22,3 +22,19 @@ test("Timeout route should fail with 500", (t) => {
       });
   });
 });
+
+test("Queue route should return with 200", (t) => {
+  return new Promise<void>((resolve, reject) => {
+    supertest(app)
+      .get("/test-name")
+      .expect(HttpStatus.OK)
+      .end((err: Error) => {
+        if (err) {
+          return reject(err);
+        }
+
+        t.pass();
+        resolve();
+      });
+  });
+});
