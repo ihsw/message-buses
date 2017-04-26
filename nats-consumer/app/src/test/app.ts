@@ -80,7 +80,7 @@ test("Bloat queue route should take a 50x bloated message and return with 200 (g
     const length = 50;
     supertest(app)
       .get(`/${getUniqueRouteName("test-name")}/bloat/${length}`)
-      .set("content-encoding", "gzip")
+      .set("accept-encoding", "gzip")
       .end((err: Error, res: supertest.Response) => {
         if (err) {
           return reject(err);
