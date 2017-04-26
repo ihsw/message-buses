@@ -44,6 +44,7 @@ export default (client: NATS.Client): express.Application => {
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Request timeout!");
     }, queueTimeout * 2);
 
+    // starting up a subscriber for the queue
     const sId = client.subscribe(queue, (msg) => {
       client.unsubscribe(sId);
       clearTimeout(tId);
