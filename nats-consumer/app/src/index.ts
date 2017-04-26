@@ -1,6 +1,7 @@
 import * as process from "process";
 import * as NATS from "nats";
 import * as express from "express";
+import * as HttpStatus from "http-status";
 
 // parsing env vars
 const natsHost = process.env["NATS_HOST"];
@@ -17,7 +18,10 @@ const app = express();
 // setting up routes
 app.get("/timeout", (_, res) => {
   const sId = client.subscribe("invalid-queue", () => { return; });
-  client.timeout(sId, 5 * 1000, 0, (timeoutSid) => res.send(`Timed out with sid ${timeoutSid}!`));
+  client.timeout(sId, 5 * 1000, 0, (timeoutSid) => {
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .send(`Timed out with sid ${timeoutSid}!`);
+  });
 });
 
 app.get("/subscribers", (_, res) => res.send(client.numSubscriptions()));
