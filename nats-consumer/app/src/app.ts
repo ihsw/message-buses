@@ -99,6 +99,8 @@ export default (client: NATS.Client): express.Application => {
       clearTimeout(tId);
 
       const msgBuf = Buffer.from(msg, "base64");
+
+      // optionally sending the gzipped message
       if (acceptsGzip) {
         res.setHeader("content-encoding", "gzip");
         res.send(msgBuf);
@@ -106,6 +108,7 @@ export default (client: NATS.Client): express.Application => {
         return;
       }
 
+      // gunzipping the message
       zlib.gunzip(msgBuf, (err, buf) => {
         if (err) {
           res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err.message);
