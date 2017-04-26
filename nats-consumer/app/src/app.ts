@@ -27,8 +27,6 @@ export default (client: NATS.Client): express.Application => {
     });
   });
 
-  app.get("/subscribers", (_, res) => res.send(client.numSubscriptions()));
-
   app.get("/:queue", (req, res) => {
     res.setHeader("content-type", "text/plain");
 
