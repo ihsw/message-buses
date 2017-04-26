@@ -1,16 +1,14 @@
 import * as NATS from "nats";
+import * as stan from "node-nats-streaming";
 import * as process from "process";
 import * as zlib from "zlib";
-
-// parsing env vars
-const natsHost = process.env["NATS_HOST"];
-const natsPort = Number(process.env["NATS_PORT"]);
+import getNatsClient from "./nats-client";
 
 // connecting
-const client = NATS.connect(`nats://${natsHost}:${natsPort}`);
-console.log(`Connected to NATS server ${natsHost}:${natsPort}`);
+const client = getNatsClient(process.env);
+const stanClient = stan.connect("ecp4", "ecp4", <stan.StanOptions>{ nc: client });
 
-// setting up queues
+// setting up nats queues
 client.subscribe("queues", (msg) => client.publish(msg, "Pong"));
 
 client.subscribe("queueWaiting", (msg) => {
@@ -38,6 +36,9 @@ client.subscribe("queueBloating", (msg) => {
     client.publish(queue, buf.toString("base64"));
   });
 });
+
+// setting up nss queues
+stanClient.publish("foo", "Hello, world!");
 
 // error handling
 client.on("error", (err: NATS.NatsError) => console.error(`${err.code}: ${err.message}`));
