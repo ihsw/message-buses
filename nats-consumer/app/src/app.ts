@@ -1,3 +1,4 @@
+import * as zlib from "zlib";
 import * as NATS from "nats";
 import * as express from "express";
 import * as HttpStatus from "http-status";
@@ -77,12 +78,10 @@ export default (client: NATS.Client): express.Application => {
     // parsing params and headers
     const queue = req.params.queue;
     const length = Number(req.params.length);
+    const acceptsGzip = req.header("accept-encoding") === "gzip";
 
     // flagging a new queue to have messages of size X thousand zeroes
-    client.publish("queueBloating", JSON.stringify({
-      length: length,
-      queue: queue
-    }));
+    client.publish("queueBloating", JSON.stringify({ length: length, queue: queue }));
 
     // setting up a full request timeout
     const timeout = 5 * 1000;
@@ -91,7 +90,7 @@ export default (client: NATS.Client): express.Application => {
         return;
       }
 
-      res.send("Request timeout!");
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Request timeout!");
     }, timeout);
 
     // starting up a subscriber waiting for a bloated message
@@ -99,9 +98,23 @@ export default (client: NATS.Client): express.Application => {
       client.unsubscribe(sId);
       clearTimeout(tId);
 
-      res.setHeader("content-encoding", "gzip");
-      res.write(Buffer.from(msg, "base64"));
-      res.end();
+      const msgBuf = Buffer.from(msg, "base64");
+      if (acceptsGzip) {
+        res.setHeader("content-encoding", "gzip");
+        res.send(msgBuf);
+
+        return;
+      }
+
+      zlib.gunzip(msgBuf, (err, buf) => {
+        if (err) {
+          res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err.message);
+
+          return;
+        }
+
+        res.send(buf);
+      });
     });
 
     // setting a timeout on the subscription
@@ -111,7 +124,7 @@ export default (client: NATS.Client): express.Application => {
       }
 
       clearTimeout(tId);
-      res.send("Queue timeout!");
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Queue timeout!");
     });
   });
 

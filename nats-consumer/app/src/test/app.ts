@@ -54,3 +54,20 @@ test("Count queue route should take 500 messages and return with 200", (t) => {
       });
   });
 });
+
+test("Bloat queue route should take a 50x bloated message and return with 200", (t) => {
+  return new Promise<void>((resolve, reject) => {
+    const length = 50;
+    supertest(app)
+      .get(`/test-name/bloat/${length}`)
+      .end((err: Error, res: supertest.Response) => {
+        if (err) {
+          return reject(err);
+        }
+
+        t.is(res.status, HttpStatus.OK, "Status was OK");
+        t.is(res.text.length, length * 1000, "Response was appropriate number of zeroes");
+        resolve();
+      });
+  });
+});
