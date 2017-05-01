@@ -1,0 +1,5 @@
+#! /bin/bash
+set -e
+
+./bin/generate-urls-file \
+  && siege -f ./urls.txt -i -c 20 -t 1m
