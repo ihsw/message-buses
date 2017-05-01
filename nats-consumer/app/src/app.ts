@@ -3,10 +3,39 @@ import * as NATS from "nats";
 import * as express from "express";
 import * as HttpStatus from "http-status";
 
+// global queue timeout
+const queueTimeout = 2.5 * 1000;
+
+// subscribe response handler with timeouts
+interface SubscribeCallback {
+  (tId: NodeJS.Timer, sId: number, msg: string);
+}
+const subscribe = (client: NATS.Client, res: express.Response, subject: string, cb: SubscribeCallback) => {
+  const tId = setTimeout(() => {
+    if (res.headersSent) {
+      return;
+    }
+
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Request timeout!");
+  }, queueTimeout * 2);
+
+  const sId = client.subscribe(subject, (msg) => {
+    cb(tId, sId, msg);
+  });
+
+  client.timeout(sId, queueTimeout, 0, () => {
+    if (res.headersSent) {
+      return;
+    }
+
+    clearTimeout(tId);
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Queue timeout!");
+  });
+};
+
 export default (client: NATS.Client): express.Application => {
   // setting up an express app
   const app = express();
-  const queueTimeout = 2.5 * 1000;
 
   // setting up routes
   app.get("/timeout", (_, res) => {
@@ -35,30 +64,10 @@ export default (client: NATS.Client): express.Application => {
     // flagging a new queue to have a message published
     client.publish("queues", queue);
 
-    // setting up a full request timeout
-    const tId = setTimeout(() => {
-      if (res.headersSent) {
-        return;
-      }
-
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Request timeout!");
-    }, queueTimeout * 2);
-
-    // starting up a subscriber for the queue
-    const sId = client.subscribe(queue, (msg) => {
+    subscribe(client, res, queue, (tId, sId, msg) => {
       client.unsubscribe(sId);
       clearTimeout(tId);
       res.send(msg);
-    });
-
-    // setting a timeout on the subscription
-    client.timeout(sId, queueTimeout, 0, () => {
-      if (res.headersSent) {
-        return;
-      }
-
-      clearTimeout(tId);
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Queue timeout!");
     });
   });
 
