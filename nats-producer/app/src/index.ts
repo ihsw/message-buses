@@ -5,7 +5,11 @@ import * as program from "commander";
 import getNatsClient from "./nats-client";
 import NssClient from "./nss-client";
 
-const main = async () => {
+interface SetupData {
+  natsClient: NATS.Client;
+  nssClient: NssClient;
+}
+const setup = async (): Promise<SetupData> => {
   // connecting nats client
   const natsClient = getNatsClient(process.env);
   natsClient.on("error", (err: NATS.NatsError) => { throw err; });
@@ -14,25 +18,41 @@ const main = async () => {
   const nssClient = new NssClient(natsClient, "ecp4", "ecp4");
   await nssClient.connect();
 
-  // program definition
-  program.version("0.0.1");
+  return <SetupData>{ natsClient, nssClient };
+};
 
-  // populate action
-  program.command("nss-populate")
-    .description("Populates NSS with RFM catalogs")
-    .action(() => {
+// program definition
+program.version("0.0.1");
+
+// populate action
+program.command("nss-populate")
+  .description("Populates NSS with RFM catalogs")
+  .action(() => {
+    const main = async () => {
+      // connecting
+      const { nssClient } = await setup();
+
       // filling up nss with rfm catalogs
       console.log("Filling!");
 
       // closing out the connection
-      nssClient.close().then(() => nssClient.natsClient.close());
-    });
+      await nssClient.close();
+      nssClient.natsClient.close();
+    };
+    main()
+      .then(() => process.exit(0))
+      .catch((err) => {
+        console.error(err);
+        process.exit(1);
+      });
+  });
 
-  // listening on queues for testing throughput
-  program.command("nats-producer")
-    .description("Listens on queues for testing throughput")
-    .action(() => {
-      console.log("Subscribing to queues");
+// listening on queues for testing throughput
+program.command("nats-producer")
+  .description("Listens on queues for testing throughput")  .action(() => {
+    const main = async () => {
+      // connecting
+      const { natsClient, nssClient } = await setup();
 
       // setting up nats queues
       natsClient.subscribe("queues", (msg) => natsClient.publish(msg, "Pong"));
@@ -62,14 +82,18 @@ const main = async () => {
           natsClient.publish(queue, buf.toString("base64"));
         });
       });
-    });
 
-  // parsing process args
-  program.parse(process.argv);
-};
-main()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
+      // closing out the connection
+      await nssClient.close();
+      nssClient.natsClient.close();
+    };
+    main()
+      .then(() => process.exit(0))
+      .catch((err) => {
+        console.error(err);
+        process.exit(1);
+      });
   });
+
+// parsing process args
+program.parse(process.argv);
