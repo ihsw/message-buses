@@ -15,11 +15,18 @@ export default class {
 
   connect(): Promise<void> {
     return new Promise<void>((resolve) => {
-      const stanClient = Stan.connect( this.clusterId, this.clientId, <Stan.StanOptions>{ nc: this.natsClient });
-      stanClient.on("connect", () => {
-        this.client = stanClient;
+      const client = Stan.connect( this.clusterId, this.clientId, <Stan.StanOptions>{ nc: this.natsClient });
+      client.on("connect", () => {
+        this.client = client;
         resolve();
       });
+    });
+  }
+
+  close(): Promise<void> {
+    return new Promise<void>((resolve) => {
+      this.client.close();
+      this.client.on("close", resolve);
     });
   }
 
