@@ -54,3 +54,10 @@ services:
     depends_on:
     - nats-server
     command: ["-s", "nats-server"]
+
+  benchmark:
+    build: ./benchmark
+    depends_on:
+    - nats-consumer
+    volumes:
+    - ./benchmark/app:/srv/app
