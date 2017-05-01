@@ -43,6 +43,7 @@ const main = async () => {
   const nssClient = new NssClient(natsClient, "ecp4", "ecp4");
   await nssClient.connect();
 
+  // closing out the connection
   await nssClient.close();
   nssClient.natsClient.close();
 };
