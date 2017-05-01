@@ -49,3 +49,8 @@ services:
     - APP_PORT=80
     volumes:
     - ./nats-consumer/app:/srv/app
+  nats-top:
+    image: byrnedo/nats-top
+    depends_on:
+    - nats-server
+    command: ["-s", "nats-server"]
