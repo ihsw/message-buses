@@ -4,7 +4,7 @@ dir: "/srv/app/storage"
 
 store_limits: {
     max_channels: 10
-    max_age: "0s"
+    max_age: "1h"
     max_bytes: 10MB
     max_msgs: 10000
 }
