@@ -52,7 +52,7 @@ program.command("nats-producer")
   .description("Listens on queues for testing throughput")  .action(() => {
     const main = async () => {
       // connecting
-      const { natsClient, nssClient } = await setup();
+      const { natsClient } = await setup();
 
       // setting up nats queues
       natsClient.subscribe("queues", (msg) => natsClient.publish(msg, "Pong"));
@@ -82,13 +82,9 @@ program.command("nats-producer")
           natsClient.publish(queue, buf.toString("base64"));
         });
       });
-
-      // closing out the connection
-      await nssClient.close();
-      nssClient.natsClient.close();
     };
     main()
-      .then(() => process.exit(0))
+      .then(() => console.log("Listening on queues"))
       .catch((err) => {
         console.error(err);
         process.exit(1);
