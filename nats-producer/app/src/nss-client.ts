@@ -3,7 +3,7 @@ import * as Stan from "node-nats-streaming";
 
 export default class {
   natsClient: NATS.Client;
-  stanClient: Stan.Stan;
+  client: Stan.Stan;
   clusterId: string;
   clientId: string;
 
@@ -17,7 +17,7 @@ export default class {
     return new Promise<void>((resolve) => {
       const stanClient = Stan.connect( this.clusterId, this.clientId, <Stan.StanOptions>{ nc: this.natsClient });
       stanClient.on("connect", () => {
-        this.stanClient = stanClient;
+        this.client = stanClient;
         resolve();
       });
     });
@@ -25,7 +25,7 @@ export default class {
 
   publish(subject: string, data: string | Buffer): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-      this.stanClient.publish(subject, data, (err, guid) => {
+      this.client.publish(subject, data, (err, guid) => {
         if (err) {
           return reject(err);
         }
@@ -37,8 +37,8 @@ export default class {
 
   lastMessage(subject: string, queueGroup: string): Promise<Stan.Message> {
     return new Promise<Stan.Message>((resolve, reject) => {
-      const opts = this.stanClient.subscriptionOptions().setStartWithLastReceived();
-      const subscription = this.stanClient.subscribe(subject, queueGroup, opts);
+      const opts = this.client.subscriptionOptions().setStartWithLastReceived();
+      const subscription = this.client.subscribe(subject, queueGroup, opts);
       subscription.on("message", (msg: Stan.Message) => {
         resolve(msg);
 
