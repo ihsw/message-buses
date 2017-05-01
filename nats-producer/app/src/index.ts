@@ -21,10 +21,6 @@ const setup = async (): Promise<SetupData> => {
   return <SetupData>{ natsClient, nssClient };
 };
 
-interface MainData extends SetupData {
-  natsSubscriptions?: number[];
-}
-
 // program definition
 program.version("0.0.1");
 
@@ -32,22 +28,15 @@ program.version("0.0.1");
 program.command("nss-populate")
   .description("Populates NSS with RFM catalogs")
   .action(() => {
-    const main = async (): Promise<MainData> => {
+    const main = async (): Promise<void> => {
       // connecting
-      const { natsClient, nssClient } = await setup();
+      // const { natsClient, nssClient } = await setup();
 
       // filling up nss with rfm catalogs
       console.log("Filling!");
-
-      return { natsClient, nssClient };
     };
     main()
-      .then(({ natsClient, nssClient }) => {
-        nssClient.close().then(() => {
-          natsClient.close();
-          process.exit(0);
-        });
-      })
+      .then(() => process.exit(0))
       .catch((err) => {
         console.error(err);
         process.exit(1);
@@ -57,15 +46,14 @@ program.command("nss-populate")
 // listening on queues for testing throughput
 program.command("nats-producer")
   .description("Listens on queues for testing throughput")  .action(() => {
-    const main = async (): Promise<MainData> => {
+    const main = async (): Promise<void> => {
       // connecting
-      const { natsClient, nssClient } = await setup();
+      const { natsClient } = await setup();
 
       // setting up nats queues
-      const natsSubscriptions: number[] = [];
-      natsSubscriptions.push(natsClient.subscribe("queues", (msg) => natsClient.publish(msg, "Pong")));
+      natsClient.subscribe("queues", (msg) => natsClient.publish(msg, "Pong"));
 
-      natsSubscriptions.push(natsClient.subscribe("queueWaiting", (msg) => {
+      natsClient.subscribe("queueWaiting", (msg) => {
         const req = JSON.parse(msg);
         const queue = req.queue;
         const count = Number(req.count);
@@ -73,9 +61,9 @@ program.command("nats-producer")
         for (let i = 0; i < count; i++) {
           natsClient.publish(queue, `Pong #${i}`);
         }
-      }));
+      });
 
-      natsSubscriptions.push(natsClient.subscribe("queueBloating", (msg) => {
+      natsClient.subscribe("queueBloating", (msg) => {
         const req = JSON.parse(msg);
         const queue = req.queue;
         const length = Number(req.length);
@@ -89,27 +77,12 @@ program.command("nats-producer")
 
           natsClient.publish(queue, buf.toString("base64"));
         });
-      }));
-
-      return { natsClient, nssClient, natsSubscriptions };
+      });
     };
     main()
-      .then(({ natsClient, nssClient, natsSubscriptions }) => {
+      .then(() => {
         console.log("Listening on queues");
-
-        process.on("SIGINT", () => {
-          if (natsSubscriptions) {
-            for (const sId of natsSubscriptions) {
-              natsClient.unsubscribe(sId);
-            }
-          }
-
-          nssClient.close()
-            .then(() => {
-              natsClient.close();
-              process.exit(0);
-            });
-        });
+        process.on("SIGINT", () => process.exit(0));
       })
       .catch((err) => {
         console.error(err);
