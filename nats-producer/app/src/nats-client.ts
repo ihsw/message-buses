@@ -8,6 +8,7 @@ export default (env: any): NATS.Client => {
     // connecting
     return NATS.connect(<NATS.ClientOpts>{
         encoding: "binary",
+        name: "nats-producer",
         url: `nats://${natsHost}:${natsPort}`
     });
 };

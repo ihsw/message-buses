@@ -6,5 +6,8 @@ export default (env: any): NATS.Client => {
     const natsPort = Number(env["NATS_PORT"]);
 
     // connecting
-    return NATS.connect(`nats://${natsHost}:${natsPort}`);
+    return NATS.connect(<NATS.ClientOpts>{
+        name: "nats-consumer",
+        url: `nats://${natsHost}:${natsPort}`
+    });
 };
