@@ -1,14 +1,11 @@
 import { test } from "ava";
 import * as supertest from "supertest";
 import * as HttpStatus from "http-status";
-import * as uuid from "uuid";
-import getApp from "../app";
+import getApp, { getUniqueRouteName } from "../app";
 import getNatsClient from "../nats-client";
 
 const client = getNatsClient(process.env);
 const app = getApp(client);
-
-const getUniqueRouteName = (name: string): string => `${name}-${uuid.v4()}`;
 
 test("Timeout route should fail with 500", (t) => {
   return new Promise<void>((resolve, reject) => {
