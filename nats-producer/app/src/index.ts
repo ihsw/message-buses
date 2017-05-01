@@ -104,8 +104,11 @@ program.command("nats-producer")
             }
           }
 
-          nssClient.client.close();
-          nssClient.natsClient.close();
+          nssClient.close()
+            .then(() => {
+              natsClient.close();
+              process.exit(0);
+            });
         });
       })
       .catch((err) => {
