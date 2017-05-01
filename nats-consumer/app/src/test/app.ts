@@ -1,7 +1,7 @@
 import { test } from "ava";
 import * as supertest from "supertest";
 import * as HttpStatus from "http-status";
-import getApp, { getUniqueRouteName } from "../app";
+import getApp, { getUniqueName } from "../app";
 import getNatsClient from "../nats-client";
 
 const client = getNatsClient(process.env);
@@ -26,7 +26,7 @@ test("Timeout route should fail with 500", (t) => {
 test("Queue route should return with 200", (t) => {
   return new Promise<void>((resolve, reject) => {
     supertest(app)
-      .get(`/${getUniqueRouteName("test-name")}`)
+      .get(`/${getUniqueName("test-name")}`)
       .expect(HttpStatus.OK)
       .end((err: Error) => {
         if (err) {
@@ -42,7 +42,7 @@ test("Queue route should return with 200", (t) => {
 test("Count queue route should take 500 messages and return with 200", (t) => {
   return new Promise<void>((resolve, reject) => {
     supertest(app)
-      .get(`/${getUniqueRouteName("test-name")}/count/500`)
+      .get(`/${getUniqueName("test-name")}/count/500`)
       .expect(HttpStatus.OK)
       .end((err: Error) => {
         if (err) {
@@ -59,7 +59,7 @@ test("Bloat queue route should take a 50x bloated message and return with 200 (n
   return new Promise<void>((resolve, reject) => {
     const length = 50;
     supertest(app)
-      .get(`/${getUniqueRouteName("test-name")}/bloat/${length}`)
+      .get(`/${getUniqueName("test-name")}/bloat/${length}`)
       .end((err: Error, res: supertest.Response) => {
         if (err) {
           return reject(err);
@@ -76,7 +76,7 @@ test("Bloat queue route should take a 50x bloated message and return with 200 (g
   return new Promise<void>((resolve, reject) => {
     const length = 50;
     supertest(app)
-      .get(`/${getUniqueRouteName("test-name")}/bloat/${length}`)
+      .get(`/${getUniqueName("test-name")}/bloat/${length}`)
       .set("accept-encoding", "gzip")
       .end((err: Error, res: supertest.Response) => {
         if (err) {

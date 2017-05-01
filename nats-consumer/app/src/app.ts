@@ -5,7 +5,7 @@ import * as HttpStatus from "http-status";
 import * as uuid from "uuid";
 
 // utility function
-export const getUniqueRouteName = (name: string): string => `${name}-${uuid.v4()}`;
+export const getUniqueName = (name: string): string => `${name}-${uuid.v4()}`;
 
 // global queue timeout
 const queueTimeout = 10 * 1000;
@@ -64,7 +64,7 @@ export default (client: NATS.Client): express.Application => {
     res.setHeader("content-type", "text/plain");
 
     // parsing params
-    const queue = getUniqueRouteName(req.params.queue);
+    const queue = getUniqueName(req.params.queue);
 
     // flagging a new queue to have a message published
     client.publish("queues", queue);
@@ -80,7 +80,7 @@ export default (client: NATS.Client): express.Application => {
     res.setHeader("content-type", "text/plain");
 
     // parsing params
-    const queue = getUniqueRouteName(req.params.queue);
+    const queue = getUniqueName(req.params.queue);
     const count = Number(req.params.count);
 
     // flagging a new queue to have X messages published
@@ -102,7 +102,7 @@ export default (client: NATS.Client): express.Application => {
     res.setHeader("content-type", "text/plain");
 
     // parsing params and headers
-    const queue = getUniqueRouteName(req.params.queue);
+    const queue = getUniqueName(req.params.queue);
     const length = Number(req.params.length);
     const acceptsGzip = req.header("accept-encoding") === "gzip";
 
