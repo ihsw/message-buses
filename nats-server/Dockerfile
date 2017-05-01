@@ -1,5 +1,6 @@
 FROM debian
 
+# env vars
 ENV NSS_VERSION v0.4.0
 ENV NSS_ARCH linux-amd64
 ENV NSS_FILE nats-streaming-server-${NSS_VERSION}
