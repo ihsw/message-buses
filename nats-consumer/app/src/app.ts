@@ -24,7 +24,6 @@ const subscribe = (client: NATS.Client, res: express.Response, subject: string, 
   }, queueTimeout * 2);
 
   const sId = client.subscribe(subject, (msg) => {
-    console.log(`Receiving message on ${subject}`);
     cb(tId, sId, msg);
   });
 
