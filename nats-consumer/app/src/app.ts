@@ -23,9 +23,7 @@ const subscribe = (client: NATS.Client, res: express.Response, subject: string, 
     res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Request timeout!");
   }, queueTimeout * 2);
 
-  const sId = client.subscribe(subject, (msg) => {
-    cb(tId, sId, msg);
-  });
+  const sId = client.subscribe(subject, (msg) => cb(tId, sId, msg));
 
   client.timeout(sId, queueTimeout, 0, () => {
     if (res.headersSent) {
