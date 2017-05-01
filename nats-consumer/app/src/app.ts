@@ -104,17 +104,7 @@ export default (client: NATS.Client): express.Application => {
     // flagging a new queue to have messages of size X thousand zeroes
     client.publish("queueBloating", JSON.stringify({ length: length, queue: queue }));
 
-    // setting up a full request timeout
-    const tId = setTimeout(() => {
-      if (res.headersSent) {
-        return;
-      }
-
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Request timeout!");
-    }, queueTimeout * 2);
-
-    // starting up a subscriber waiting for a bloated message
-    const sId = client.subscribe(queue, (msg: string) => {
+    subscribe(client, res, queue, (tId, sId, msg) => {
       client.unsubscribe(sId);
       clearTimeout(tId);
 
@@ -138,16 +128,6 @@ export default (client: NATS.Client): express.Application => {
 
         res.send(buf);
       });
-    });
-
-    // setting a timeout on the subscription
-    client.timeout(sId, queueTimeout, 0, () => {
-      if (res.headersSent) {
-        return;
-      }
-
-      clearTimeout(tId);
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Queue timeout!");
     });
   });
 
