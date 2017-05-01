@@ -4,7 +4,7 @@ import * as express from "express";
 import * as HttpStatus from "http-status";
 
 // global queue timeout
-const queueTimeout = 2.5 * 1000;
+const queueTimeout = 10 * 1000;
 
 // subscribe response handler with timeouts
 interface SubscribeCallback {
