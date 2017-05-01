@@ -35,8 +35,9 @@ export default class {
     });
   }
 
-  subscribeOnce(subject: string, queueGroup: string, opts?: Stan.SubscriptionOptions): Promise<Stan.Message> {
+  lastMessage(subject: string, queueGroup: string): Promise<Stan.Message> {
     return new Promise<Stan.Message>((resolve, reject) => {
+      const opts = this.stanClient.subscriptionOptions().setStartWithLastReceived();
       const subscription = this.stanClient.subscribe(subject, queueGroup, opts);
       subscription.on("message", (msg: Stan.Message) => {
         resolve(msg);

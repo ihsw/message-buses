@@ -1,7 +1,7 @@
 import * as process from "process";
 // import * as zlib from "zlib";
 import * as NATS from "nats";
-import * as Stan from "node-nats-streaming";
+// import * as Stan from "node-nats-streaming";
 import getNatsClient from "./nats-client";
 import NssClient from "./nss-client";
 
@@ -43,36 +43,8 @@ const main = async () => {
   const nssClient = new NssClient(natsClient, "ecp4", "ecp4");
   await nssClient.connect();
 
-  // sending a message
-  const subject = "foo";
-  const guid = await nssClient.publish(subject, "Hello, world!");
-  console.log(`sent message confirmed with guid ${guid}`);
-
-  // subscribing at the end of the queue
-  const subscription = nssClient.stanClient.subscribe(
-    subject,
-    `${subject}.workers`,
-    nssClient.stanClient.subscriptionOptions().setStartWithLastReceived()
-  );
-  let resolveTimeoutId;
-  return new Promise<void>((resolve) => {
-    subscription.on("message", (msg: Stan.Message) => {
-      // clearing the resolve timeout
-      if (resolveTimeoutId) {
-        clearTimeout(resolveTimeoutId);
-      }
-
-      console.log(msg.getData());
-
-      // starting up another resolve timeout
-      resolveTimeoutId = setTimeout(() => {
-        subscription.unsubscribe();
-        resolve();
-      }, 5 * 1000);
-    });
-
-    resolveTimeoutId = setTimeout(() => resolve, 5 * 1000);
-  });
+  nssClient.stanClient.close();
+  nssClient.natsClient.close();
 };
 main()
   .then(() => process.exit(0))
