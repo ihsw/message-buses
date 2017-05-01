@@ -1,9 +1,9 @@
 import * as NATS from "nats";
-import * as Stan from "node-nats-streaming";
+import * as NSS from "node-nats-streaming";
 
 export default class {
   natsClient: NATS.Client;
-  client: Stan.Stan;
+  client: NSS.Stan;
   clusterId: string;
   clientId: string;
 
@@ -15,7 +15,7 @@ export default class {
 
   connect(): Promise<void> {
     return new Promise<void>((resolve) => {
-      const client = Stan.connect( this.clusterId, this.clientId, <Stan.StanOptions>{ nc: this.natsClient });
+      const client = NSS.connect( this.clusterId, this.clientId, <NSS.StanOptions>{ nc: this.natsClient });
       client.on("connect", () => {
         this.client = client;
         resolve();
@@ -42,11 +42,11 @@ export default class {
     });
   }
 
-  lastMessage(subject: string, queueGroup: string): Promise<Stan.Message> {
-    return new Promise<Stan.Message>((resolve, reject) => {
+  lastMessage(subject: string, queueGroup: string): Promise<NSS.Message> {
+    return new Promise<NSS.Message>((resolve, reject) => {
       const opts = this.client.subscriptionOptions().setStartWithLastReceived();
       const subscription = this.client.subscribe(subject, queueGroup, opts);
-      subscription.on("message", (msg: Stan.Message) => {
+      subscription.on("message", (msg: NSS.Message) => {
         resolve(msg);
 
         subscription.unsubscribe();
