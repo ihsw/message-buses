@@ -1,12 +1,9 @@
-import * as NATS from "nats";
-import * as stan from "node-nats-streaming";
 import * as process from "process";
 // import * as zlib from "zlib";
+import * as NATS from "nats";
+import * as Stan from "node-nats-streaming";
 import getNatsClient from "./nats-client";
-
-// connecting
-const client = getNatsClient(process.env);
-const stanClient = stan.connect("ecp4", "ecp4", <stan.StanOptions>{ nc: client });
+import NssClient from "./nss-client";
 
 // setting up nats queues
 // client.subscribe("queues", (msg) => client.publish(msg, "Pong"));
@@ -37,20 +34,49 @@ const stanClient = stan.connect("ecp4", "ecp4", <stan.StanOptions>{ nc: client }
 //   });
 // });
 
-// setting up nss queues
-// stanClient.publish("foo", "Hello, world!");
-for (let i = 0; i < 10; i++) {
-  const opts = stanClient.subscriptionOptions();
-  opts.setStartWithLastReceived();
-  const subscription = stanClient.subscribe("foo", "foo");
-  subscription.on("message", (msg) => {
-    console.log(msg);
-    subscription.unsubscribe();
+const main = async () => {
+  // connecting nats client
+  const natsClient = getNatsClient(process.env);
+  natsClient.on("error", (err: NATS.NatsError) => { throw err; });
+
+  // connecting nss client
+  const nssClient = new NssClient(natsClient, "ecp4", "ecp4");
+  await nssClient.connect();
+
+  // sending a message
+  const subject = "foo";
+  const guid = await nssClient.publish(subject, "Hello, world!");
+  console.log(`sent message confirmed with guid ${guid}`);
+
+  // subscribing at the end of the queue
+  const subscription = nssClient.stanClient.subscribe(
+    subject,
+    `${subject}.workers`,
+    nssClient.stanClient.subscriptionOptions().setStartWithLastReceived()
+  );
+  let resolveTimeoutId;
+  return new Promise<void>((resolve) => {
+    subscription.on("message", (msg: Stan.Message) => {
+      // clearing the resolve timeout
+      if (resolveTimeoutId) {
+        clearTimeout(resolveTimeoutId);
+      }
+
+      console.log(msg.getData());
+
+      // starting up another resolve timeout
+      resolveTimeoutId = setTimeout(() => {
+        subscription.unsubscribe();
+        resolve();
+      }, 5 * 1000);
+    });
+
+    resolveTimeoutId = setTimeout(() => resolve, 5 * 1000);
   });
-}
-
-// error handling
-client.on("error", (err: NATS.NatsError) => console.error(`${err.code}: ${err.message}`));
-
-// indicating activity
-console.log("Subscribed to queues");
+};
+main()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
