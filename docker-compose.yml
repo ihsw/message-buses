@@ -49,15 +49,16 @@ services:
     - APP_PORT=80
     volumes:
     - ./nats-consumer/app:/srv/app
+  nats-consumer-benchmark:
+    build: ./benchmark
+    depends_on:
+    - nats-consumer
+    environment:
+    - TARGET_HOST=nats-consumer
+    volumes:
+    - ./benchmark/app:/srv/app
   nats-top:
     image: byrnedo/nats-top
     depends_on:
     - nats-server
     command: ["-s", "nats-server"]
-
-  benchmark:
-    build: ./benchmark
-    depends_on:
-    - nats-consumer
-    volumes:
-    - ./benchmark/app:/srv/app
