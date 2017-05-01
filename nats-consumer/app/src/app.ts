@@ -81,18 +81,8 @@ export default (client: NATS.Client): express.Application => {
     // flagging a new queue to have X messages published
     client.publish("queueWaiting", JSON.stringify({ count: count, queue: queue }));
 
-    // setting up a full request timeout
-    const tId = setTimeout(() => {
-      if (res.headersSent) {
-        return;
-      }
-
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Request timeout!");
-    }, queueTimeout * 2);
-
-    // starting up a subscriber waiting for messages
     let messageCount = 0;
-    const sId = client.subscribe(queue, (msg) => {
+    subscribe(client, res, queue, (tId, sId, msg) => {
       res.write(`${msg}\n`);
 
       if (++messageCount === count) {
@@ -100,16 +90,6 @@ export default (client: NATS.Client): express.Application => {
         clearTimeout(tId);
         res.end();
       }
-    });
-
-    // setting a timeout on the subscription
-    client.timeout(sId, queueTimeout, 0, () => {
-      if (res.headersSent) {
-        return;
-      }
-
-      clearTimeout(tId);
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Queue timeout!");
     });
   });
 
