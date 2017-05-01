@@ -49,6 +49,7 @@ program.command("nats-producer")
     const main = async (): Promise<void> => {
       // connecting
       const { natsClient } = await setup();
+      natsClient.on("error", (err) => { throw err; });
 
       // setting up nats queues
       natsClient.subscribe("queues", (msg) => natsClient.publish(msg, "Pong"));
