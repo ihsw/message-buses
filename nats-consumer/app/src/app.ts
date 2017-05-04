@@ -1,10 +1,27 @@
 import * as zlib from "zlib";
 import * as NATS from "nats";
-import * as NSS from "node-nats-streaming";
 import * as express from "express";
 import * as HttpStatus from "http-status";
 import * as uuid from "uuid";
+import getNatsClient from "./nats-client";
 import NssClient from "./nss-client";
+
+// setup of nats and nss connections
+interface SetupData {
+  natsClient: NATS.Client;
+  nssClient: NssClient;
+}
+export const setup = async (): Promise<SetupData> => {
+  // connecting nats client
+  const natsClient = getNatsClient(process.env);
+  natsClient.on("error", (err: NATS.NatsError) => { throw err; });
+
+  // connecting nss client
+  const nssClient = new NssClient(natsClient, "ecp4", "ecp4");
+  await nssClient.connect();
+
+  return <SetupData>{ natsClient, nssClient };
+};
 
 // utility function
 export const getUniqueName = (name: string): string => {

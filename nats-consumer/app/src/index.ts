@@ -1,20 +1,24 @@
 import * as process from "process";
-import * as NATS from "nats";
-import getApp from "./app";
-import getNatsClient from "./nats-client";
+import getApp, { setup } from "./app";
 
 // parsing env vars
 const appPort = Number(process.env["APP_PORT"]);
 
-// connecting
-const client = getNatsClient(process.env);
-console.log("Connected to NATS server");
+// main
+const main = async () => {
+  // connecting
+  const { natsClient, nssClient } = await setup();
+  natsClient.on("error", (err) => { throw err; });
 
-// generating an app
-const app = getApp(client);
+  // generating an app
+  const app = getApp(natsClient, nssClient);
 
-// error handling
-client.on("error", (err: NATS.NatsError) => console.error(`${err.code}: ${err.message}`));
-
-// listening on app port
-app.listen(appPort, () => console.log(`Listening on ${appPort}`));
+  // listening on app port
+  app.listen(appPort, () => console.log(`Listening on ${appPort}`));
+};
+main()
+  .then(() => process.on("SIGINT", () => process.exit(0)))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
