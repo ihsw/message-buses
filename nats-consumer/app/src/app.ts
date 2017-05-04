@@ -32,9 +32,8 @@ const subscribe = (client: NATS.Client, res: express.Response, subject: string, 
   const sId = client.subscribe(subject, (msg) => cb(tId, sId, msg));
 
   client.timeout(sId, queueTimeout, 0, () => {
-    console.log("Queue timeout!!");
-    console.log(subject);
     console.log(`Queue timeout on ${subject}!`);
+    console.log(`Queue timeout on ${subject}`);
     if (res.headersSent) {
       return;
     }
