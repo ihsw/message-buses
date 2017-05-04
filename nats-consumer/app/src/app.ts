@@ -11,8 +11,6 @@ export const getUniqueName = (name: string): string => {
   }
 
   if (/[\w\d\-]/.test(name) === false) {
-    console.log("invalid name found");
-    console.log(name);
     throw new Error("Name must be alphanumeric characters or dashes");
   }
 
