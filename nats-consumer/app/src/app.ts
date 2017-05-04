@@ -17,7 +17,7 @@ export const setup = async (env: any): Promise<SetupData> => {
   natsClient.on("error", (err: NATS.NatsError) => { throw err; });
 
   // connecting nss client
-  const nssClient = new NssClient(natsClient, "ecp4", "ecp4");
+  const nssClient = new NssClient(natsClient, "ecp4", "nats-consumer");
   await nssClient.connect();
 
   return <SetupData>{ natsClient, nssClient };

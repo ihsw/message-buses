@@ -16,7 +16,7 @@ const setup = async (): Promise<SetupData> => {
   natsClient.on("error", (err: NATS.NatsError) => { throw err; });
 
   // connecting nss client
-  const nssClient = new NssClient(natsClient, "ecp4", "ecp4");
+  const nssClient = new NssClient(natsClient, "ecp4", "nats-producer");
   await nssClient.connect();
 
   return <SetupData>{ natsClient, nssClient };
