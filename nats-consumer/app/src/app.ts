@@ -14,7 +14,7 @@ export const getUniqueName = (name: string): string => {
 };
 
 // global queue timeout
-const queueTimeout = 20 * 1000;
+const queueTimeout = 10 * 1000;
 
 // subscribe response handler with timeouts
 interface SubscribeCallback {
