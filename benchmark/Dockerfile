@@ -9,4 +9,4 @@ COPY ./app $APP_DIR
 WORKDIR $APP_DIR
 
 ENTRYPOINT []
-CMD ["bash"]
+CMD ["./bin/run-app"]
