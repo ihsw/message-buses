@@ -45,6 +45,7 @@ export default class {
   lastMessage(subject: string, queueGroup: string): Promise<NSS.Message> {
     return new Promise<NSS.Message>((resolve, reject) => {
       const opts = this.client.subscriptionOptions().setStartWithLastReceived();
+      opts.ackWait = 5 * 1000;
       const subscription = this.client.subscribe(subject, queueGroup, opts);
       subscription.on("message", (msg: NSS.Message) => {
         resolve(msg);
