@@ -5,7 +5,13 @@ import * as HttpStatus from "http-status";
 import * as uuid from "uuid";
 
 // utility function
-export const getUniqueName = (name: string): string => `${name}-${uuid.v4()}`;
+export const getUniqueName = (name: string): string => {
+  if (name.length === 0) {
+    throw new Error("Name must not be blank");
+  }
+
+  return `${name}-${uuid.v4()}`;
+};
 
 // global queue timeout
 const queueTimeout = 10 * 1000;
@@ -27,6 +33,7 @@ const subscribe = (client: NATS.Client, res: express.Response, subject: string, 
 
   client.timeout(sId, queueTimeout, 0, () => {
     console.log("Queue timeout!!");
+    console.log(subject);
     console.log(`Queue timeout on ${subject}!`);
     if (res.headersSent) {
       return;
