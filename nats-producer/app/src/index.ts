@@ -1,5 +1,6 @@
 import * as process from "process";
 import * as zlib from "zlib";
+import * as fs from "fs";
 import * as NATS from "nats";
 import * as program from "commander";
 import getNatsClient from "./nats-client";
@@ -24,16 +25,52 @@ const setup = async (): Promise<SetupData> => {
 // program definition
 program.version("0.0.1");
 
+const getFilenames = (dirPath: string): Promise<string[]> => {
+  return new Promise<string[]>((resolve, reject) => {
+    fs.readdir(dirPath, (err, files) => {
+      if (err) {
+        return reject(err);
+      }
+
+      resolve(files);
+    });
+  });
+};
+
+const readFile = (path: string): Promise<Buffer> => {
+  return new Promise<Buffer>((resolve, reject) => {
+    fs.readFile(path, (err, data) => {
+      if (err) {
+        return reject(err);
+      }
+
+      resolve(data);
+    });
+  });
+};
+
 // populate action
 program.command("nss-populate")
   .description("Populates NSS with RFM catalogs")
   .action(() => {
     const main = async (): Promise<void> => {
       // connecting
-      // const { natsClient, nssClient } = await setup();
+      const { nssClient } = await setup();
 
-      // filling up nss with rfm catalogs
-      console.log("Filling!");
+      // opening the rfm dir
+      const rfmDir = `${process.cwd()}/CommonTestStore300`;
+      const filenames = await getFilenames(rfmDir);
+      const whitelistedStore = 2301;
+      for (const filename of filenames) {
+        const [, storeId] = filename.split("_");
+        if (Number(storeId) !== whitelistedStore) {
+          continue;
+        }
+
+        const fileContents = await readFile(`${rfmDir}/${filename}`);
+        const publishId = await nssClient.publish(`store-file/${storeId}`, fileContents);
+        console.log(publishId);
+      }
     };
     main()
       .then(() => process.exit(0))
