@@ -1,132 +1,142 @@
+import * as process from "process";
 import { test } from "ava";
 import * as supertest from "supertest";
 import * as HttpStatus from "http-status";
 import getApp, { getUniqueName, setup } from "../app";
 
-// main
-const main = async () => {
-  const { natsClient, nssClient } = await setup();
+test("Timeout route should fail with 500", async (t) => {
+  const { natsClient, nssClient } = await setup(process.env);
   const app = getApp(natsClient, nssClient);
 
-  test("Timeout route should fail with 500", (t) => {
-    return new Promise<void>((resolve, reject) => {
-      supertest(app)
-        .get("/timeout")
-        .expect(HttpStatus.INTERNAL_SERVER_ERROR)
-        .end((err: Error) => {
-          if (err) {
-            return reject(err);
-          }
+  return new Promise<void>((resolve, reject) => {
+    supertest(app)
+      .get("/timeout")
+      .expect(HttpStatus.INTERNAL_SERVER_ERROR)
+      .end((err: Error) => {
+        if (err) {
+          return reject(err);
+        }
 
-          t.pass();
-          resolve();
-        });
-    });
+        t.pass();
+        resolve();
+      });
   });
+});
 
-  test("Queue route should return with 200", (t) => {
-    return new Promise<void>((resolve, reject) => {
-      supertest(app)
-        .get(`/test-name`)
-        .expect(HttpStatus.OK)
-        .end((err: Error) => {
-          if (err) {
-            return reject(err);
-          }
+test("Queue route should return with 200", async (t) => {
+  const { natsClient, nssClient } = await setup(process.env);
+  const app = getApp(natsClient, nssClient);
 
-          t.pass();
-          resolve();
-        });
-    });
+  return new Promise<void>((resolve, reject) => {
+    supertest(app)
+      .get(`/test-name`)
+      .expect(HttpStatus.OK)
+      .end((err: Error) => {
+        if (err) {
+          return reject(err);
+        }
+
+        t.pass();
+        resolve();
+      });
   });
+});
 
-  test("Queue route should fail on invalid queue name", (t) => {
-    return new Promise<void>((resolve, reject) => {
-      supertest(app)
-        .get("/!@#$%^&*()")
-        .expect(HttpStatus.INTERNAL_SERVER_ERROR)
-        .end((err: Error) => {
-          if (err) {
-            return reject(err);
-          }
+test("Queue route should fail on invalid queue name", async (t) => {
+  const { natsClient, nssClient } = await setup(process.env);
+  const app = getApp(natsClient, nssClient);
 
-          t.pass();
-          resolve();
-        });
-    });
+  return new Promise<void>((resolve, reject) => {
+    supertest(app)
+      .get("/!@#$%^&*()")
+      .expect(HttpStatus.INTERNAL_SERVER_ERROR)
+      .end((err: Error) => {
+        if (err) {
+          return reject(err);
+        }
+
+        t.pass();
+        resolve();
+      });
   });
+});
 
-  test("Count queue route should take 500 messages and return with 200", (t) => {
-    return new Promise<void>((resolve, reject) => {
-      supertest(app)
-        .get("/test-name/count/500")
-        .expect(HttpStatus.OK)
-        .end((err: Error) => {
-          if (err) {
-            return reject(err);
-          }
+test("Count queue route should take 500 messages and return with 200", async (t) => {
+  const { natsClient, nssClient } = await setup(process.env);
+  const app = getApp(natsClient, nssClient);
 
-          t.pass();
-          resolve();
-        });
-    });
+  return new Promise<void>((resolve, reject) => {
+    supertest(app)
+      .get("/test-name/count/500")
+      .expect(HttpStatus.OK)
+      .end((err: Error) => {
+        if (err) {
+          return reject(err);
+        }
+
+        t.pass();
+        resolve();
+      });
   });
+});
 
-  test("Bloat queue route should take a 50x bloated message and return with 200 (non-gzip response)", (t) => {
-    return new Promise<void>((resolve, reject) => {
-      const length = 50;
-      supertest(app)
-        .get(`/${getUniqueName("test-name")}/bloat/${length}`)
-        .end((err: Error, res: supertest.Response) => {
-          if (err) {
-            return reject(err);
-          }
+test("Bloat queue route should take a 50x bloated message and return with 200 (non-gzip response)", async (t) => {
+  const { natsClient, nssClient } = await setup(process.env);
+  const app = getApp(natsClient, nssClient);
 
-          t.is(res.status, HttpStatus.OK, `Status was not OK: ${res.text}`);
-          t.is(res.text.length, length * 1000, "Response was not appropriate number of zeroes");
-          resolve();
-        });
-    });
+  return new Promise<void>((resolve, reject) => {
+    const length = 50;
+    supertest(app)
+      .get(`/${getUniqueName("test-name")}/bloat/${length}`)
+      .end((err: Error, res: supertest.Response) => {
+        if (err) {
+          return reject(err);
+        }
+
+        t.is(res.status, HttpStatus.OK, `Status was not OK: ${res.text}`);
+        t.is(res.text.length, length * 1000, "Response was not appropriate number of zeroes");
+        resolve();
+      });
   });
+});
 
-  test("Bloat queue route should take a 50x bloated message and return with 200 (gzip response)", (t) => {
-    return new Promise<void>((resolve, reject) => {
-      const length = 50;
-      supertest(app)
-        .get(`/test-name/bloat/${length}`)
-        .set("accept-encoding", "gzip")
-        .end((err: Error, res: supertest.Response) => {
-          if (err) {
-            return reject(err);
-          }
+test("Bloat queue route should take a 50x bloated message and return with 200 (gzip response)", async (t) => {
+  const { natsClient, nssClient } = await setup(process.env);
+  const app = getApp(natsClient, nssClient);
 
-          t.is(res.status, HttpStatus.OK, `Status was not OK: ${res.text}`);
-          t.is(res.text.length, length * 1000, "Response was not appropriate number of zeroes");
-          resolve();
-        });
-    });
+  return new Promise<void>((resolve, reject) => {
+    const length = 50;
+    supertest(app)
+      .get(`/test-name/bloat/${length}`)
+      .set("accept-encoding", "gzip")
+      .end((err: Error, res: supertest.Response) => {
+        if (err) {
+          return reject(err);
+        }
+
+        t.is(res.status, HttpStatus.OK, `Status was not OK: ${res.text}`);
+        t.is(res.text.length, length * 1000, "Response was not appropriate number of zeroes");
+        resolve();
+      });
   });
+});
 
-  test("Rfm file queue route should return with proper content type and 200", (t) => {
-    return new Promise<void>((resolve, reject) => {
-      const storeId = 2301;
-      supertest(app)
-        .get(`/store/${storeId}`)
-        .expect("content-type", "application/zip, application/octet-stream")
-        .end((err: Error, res: supertest.Response) => {
-          if (err) {
-            return reject(err);
-          }
+test("Rfm file queue route should return with proper content type and 200", async (t) => {
+  const { natsClient, nssClient } = await setup(process.env);
+  const app = getApp(natsClient, nssClient);
 
-          t.is(res.status, HttpStatus.OK, `Status was not OK: ${res.text}`);
-          resolve();
-        });
-    });
+  return new Promise<void>((resolve, reject) => {
+    const storeId = 2301;
+    supertest(app)
+      .get(`/store/${storeId}`)
+      .expect("content-type", "application/zip, application/octet-stream")
+      .end((err: Error, res: supertest.Response) => {
+        if (err) {
+          return reject(err);
+        }
+
+        t.is(res.status, HttpStatus.OK, `Status was not OK: ${res.text}`);
+        resolve();
+      });
   });
-};
-main()
-  .then(() => process.on("SIGINT", () => process.exit(0)))
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
+});

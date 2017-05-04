@@ -7,7 +7,7 @@ const appPort = Number(process.env["APP_PORT"]);
 // main
 const main = async () => {
   // connecting
-  const { natsClient, nssClient } = await setup();
+  const { natsClient, nssClient } = await setup(process.env);
   natsClient.on("error", (err) => { throw err; });
 
   // generating an app

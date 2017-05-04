@@ -11,9 +11,9 @@ interface SetupData {
   natsClient: NATS.Client;
   nssClient: NssClient;
 }
-export const setup = async (): Promise<SetupData> => {
+export const setup = async (env: any): Promise<SetupData> => {
   // connecting nats client
-  const natsClient = getNatsClient(process.env);
+  const natsClient = getNatsClient(env);
   natsClient.on("error", (err: NATS.NatsError) => { throw err; });
 
   // connecting nss client
