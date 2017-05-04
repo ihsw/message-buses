@@ -68,7 +68,7 @@ program.command("nss-populate")
         }
 
         const fileContents = await readFile(`${rfmDir}/${filename}`);
-        const publishId = await nssClient.publish(`store-file/${storeId}`, fileContents);
+        const publishId = await nssClient.publish(`store-file/${storeId}`, fileContents.toString("base64"));
         console.log(publishId);
       }
     };

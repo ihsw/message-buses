@@ -105,3 +105,20 @@ test("Bloat queue route should take a 50x bloated message and return with 200 (g
       });
   });
 });
+
+test("Rfm file queue route should return with proper content type and 200", (t) => {
+  return new Promise<void>((resolve, reject) => {
+    const storeId = 2301;
+    supertest(app)
+      .get(`/store/${storeId}`)
+      .expect("content-type", "application/zip, application/octet-stream")
+      .end((err: Error, res: supertest.Response) => {
+        if (err) {
+          return reject(err);
+        }
+
+        t.is(res.status, HttpStatus.OK, `Status was not OK: ${res.text}`);
+        resolve();
+      });
+  });
+});

@@ -1,8 +1,10 @@
 import * as zlib from "zlib";
 import * as NATS from "nats";
+import * as NSS from "node-nats-streaming";
 import * as express from "express";
 import * as HttpStatus from "http-status";
 import * as uuid from "uuid";
+import NssClient from "./nss-client";
 
 // utility function
 export const getUniqueName = (name: string): string => {
@@ -24,7 +26,7 @@ const queueTimeout = 10 * 1000;
 interface SubscribeCallback {
   (tId: NodeJS.Timer, sId: number, msg: string);
 }
-const subscribe = (client: NATS.Client, req: express.Request, res: express.Response, subject: string, cb: SubscribeCallback) => {
+const subscribe = (natsClient: NATS.Client, req: express.Request, res: express.Response, subject: string, cb: SubscribeCallback) => {
   const tId = setTimeout(() => {
     if (res.headersSent) {
       return;
@@ -33,9 +35,9 @@ const subscribe = (client: NATS.Client, req: express.Request, res: express.Respo
     res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Request timeout!");
   }, queueTimeout * 2);
 
-  const sId = client.subscribe(subject, (msg) => cb(tId, sId, msg));
+  const sId = natsClient.subscribe(subject, (msg) => cb(tId, sId, msg));
 
-  client.timeout(sId, queueTimeout, 0, () => {
+  natsClient.timeout(sId, queueTimeout, 0, () => {
     console.log(`Queue timeout on ${subject} timed out at ${req.originalUrl}`);
     if (res.headersSent) {
       return;
@@ -46,7 +48,7 @@ const subscribe = (client: NATS.Client, req: express.Request, res: express.Respo
   });
 };
 
-export default (client: NATS.Client): express.Application => {
+export default (natsClient: NATS.Client, nssClient: NssClient): express.Application => {
   // setting up an express app
   const app = express();
 
@@ -61,8 +63,8 @@ export default (client: NATS.Client): express.Application => {
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Request timeout!");
     }, queueTimeout * 2);
 
-    const sId = client.subscribe("invalid-queue", () => { return; });
-    client.timeout(sId, queueTimeout, 0, (timeoutSid) => {
+    const sId = natsClient.subscribe("invalid-queue", () => { return; });
+    natsClient.timeout(sId, queueTimeout, 0, (timeoutSid) => {
       clearTimeout(tId);
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(`Timed out with sid ${timeoutSid}!`);
     });
@@ -82,10 +84,10 @@ export default (client: NATS.Client): express.Application => {
     }
 
     // flagging a new queue to have a message published
-    client.publish("queues", queue);
+    natsClient.publish("queues", queue);
 
-    subscribe(client, req, res, queue, (tId, sId, msg) => {
-      client.unsubscribe(sId);
+    subscribe(natsClient, req, res, queue, (tId, sId, msg) => {
+      natsClient.unsubscribe(sId);
       clearTimeout(tId);
       res.send(msg);
     });
@@ -106,18 +108,33 @@ export default (client: NATS.Client): express.Application => {
     const count = Number(req.params.count);
 
     // flagging a new queue to have X messages published
-    client.publish("queueWaiting", JSON.stringify({ count: count, queue: queue }));
+    natsClient.publish("queueWaiting", JSON.stringify({ count: count, queue: queue }));
 
     let messageCount = 0;
-    subscribe(client, req, res, queue, (tId, sId, msg) => {
+    subscribe(natsClient, req, res, queue, (tId, sId, msg) => {
       res.write(`${msg}\n`);
 
       if (++messageCount === count) {
-        client.unsubscribe(sId);
+        natsClient.unsubscribe(sId);
         clearTimeout(tId);
         res.end();
       }
     });
+  });
+
+  app.get("/store/:storeId", (req, res) => {
+    res.setHeader("content-type", "application/zip, application/octet-stream");
+
+    // parsing params and headers
+    const storeId = req.params.storeId;
+
+    // fetching the store contents
+    nssClient.lastMessage(`store-file/${storeId}`, "store-file.workers")
+      .then((result) => {
+        const msgBuf = Buffer.from((result.getData() as Buffer).toString(), "base64");
+        res.write(msgBuf);
+      })
+      .catch((err) => res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err.message));
   });
 
   app.get("/:queue/bloat/:length", (req, res) => {
@@ -136,10 +153,10 @@ export default (client: NATS.Client): express.Application => {
     const acceptsGzip = req.header("accept-encoding") === "gzip";
 
     // flagging a new queue to have messages of size X thousand zeroes
-    client.publish("queueBloating", JSON.stringify({ length: length, queue: queue }));
+    natsClient.publish("queueBloating", JSON.stringify({ length: length, queue: queue }));
 
-    subscribe(client, req, res, queue, (tId, sId, msg) => {
-      client.unsubscribe(sId);
+    subscribe(natsClient, req, res, queue, (tId, sId, msg) => {
+      natsClient.unsubscribe(sId);
       clearTimeout(tId);
 
       const msgBuf = Buffer.from(msg, "base64");
