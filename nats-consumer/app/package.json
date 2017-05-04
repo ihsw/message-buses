@@ -25,6 +25,7 @@
   "dependencies": {
     "express": "^4.15.2",
     "http-status": "^1.0.1",
-    "nats": "^0.7.16"
+    "nats": "^0.7.16",
+    "node-nats-streaming": "0.0.25"
   }
 }
