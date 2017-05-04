@@ -20,7 +20,7 @@ const queueTimeout = 20 * 1000;
 interface SubscribeCallback {
   (tId: NodeJS.Timer, sId: number, msg: string);
 }
-const subscribe = (client: NATS.Client, res: express.Response, subject: string, cb: SubscribeCallback) => {
+const subscribe = (client: NATS.Client, req: express.Request, res: express.Response, subject: string, cb: SubscribeCallback) => {
   const tId = setTimeout(() => {
     if (res.headersSent) {
       return;
@@ -32,8 +32,7 @@ const subscribe = (client: NATS.Client, res: express.Response, subject: string, 
   const sId = client.subscribe(subject, (msg) => cb(tId, sId, msg));
 
   client.timeout(sId, queueTimeout, 0, () => {
-    console.log(`Queue timeout on ${subject}!`);
-    console.log(`Queue timeout on ${subject}`);
+    console.log(`Queue timeout on ${subject} timed out at ${req.originalUrl}`);
     if (res.headersSent) {
       return;
     }
@@ -74,7 +73,7 @@ export default (client: NATS.Client): express.Application => {
     // flagging a new queue to have a message published
     client.publish("queues", queue);
 
-    subscribe(client, res, queue, (tId, sId, msg) => {
+    subscribe(client, req, res, queue, (tId, sId, msg) => {
       client.unsubscribe(sId);
       clearTimeout(tId);
       res.send(msg);
@@ -92,7 +91,7 @@ export default (client: NATS.Client): express.Application => {
     client.publish("queueWaiting", JSON.stringify({ count: count, queue: queue }));
 
     let messageCount = 0;
-    subscribe(client, res, queue, (tId, sId, msg) => {
+    subscribe(client, req, res, queue, (tId, sId, msg) => {
       res.write(`${msg}\n`);
 
       if (++messageCount === count) {
@@ -114,7 +113,7 @@ export default (client: NATS.Client): express.Application => {
     // flagging a new queue to have messages of size X thousand zeroes
     client.publish("queueBloating", JSON.stringify({ length: length, queue: queue }));
 
-    subscribe(client, res, queue, (tId, sId, msg) => {
+    subscribe(client, req, res, queue, (tId, sId, msg) => {
       client.unsubscribe(sId);
       clearTimeout(tId);
 
