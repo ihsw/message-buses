@@ -10,6 +10,10 @@ export const getUniqueName = (name: string): string => {
     throw new Error("Name must not be blank");
   }
 
+  if (/[\w\d\-]/.test(name) === false) {
+    throw new Error("Name must be alphanumeric characters or dashes");
+  }
+
   return `${name}-${uuid.v4()}`;
 };
 

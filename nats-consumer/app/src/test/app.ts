@@ -39,6 +39,22 @@ test("Queue route should return with 200", (t) => {
   });
 });
 
+test("Queue route should fail on invalid queue name", (t) => {
+  return new Promise<void>((resolve, reject) => {
+    supertest(app)
+      .get(`/${getUniqueName("!@#$%^&*()")}`)
+      .expect(HttpStatus.INTERNAL_SERVER_ERROR)
+      .end((err: Error) => {
+        if (err) {
+          return reject(err);
+        }
+
+        t.pass();
+        resolve();
+      });
+  });
+});
+
 test("Count queue route should take 500 messages and return with 200", (t) => {
   return new Promise<void>((resolve, reject) => {
     supertest(app)
