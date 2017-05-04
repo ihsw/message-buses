@@ -26,7 +26,7 @@ test("Timeout route should fail with 500", (t) => {
 test("Queue route should return with 200", (t) => {
   return new Promise<void>((resolve, reject) => {
     supertest(app)
-      .get(`/${getUniqueName("test-name")}`)
+      .get(`/test-name`)
       .expect(HttpStatus.OK)
       .end((err: Error) => {
         if (err) {
@@ -42,7 +42,7 @@ test("Queue route should return with 200", (t) => {
 test("Queue route should fail on invalid queue name", (t) => {
   return new Promise<void>((resolve, reject) => {
     supertest(app)
-      .get(`/${getUniqueName("!@#$%^&*()")}`)
+      .get("/!@#$%^&*()")
       .expect(HttpStatus.INTERNAL_SERVER_ERROR)
       .end((err: Error) => {
         if (err) {
@@ -58,7 +58,7 @@ test("Queue route should fail on invalid queue name", (t) => {
 test("Count queue route should take 500 messages and return with 200", (t) => {
   return new Promise<void>((resolve, reject) => {
     supertest(app)
-      .get(`/${getUniqueName("test-name")}/count/500`)
+      .get("/test-name/count/500")
       .expect(HttpStatus.OK)
       .end((err: Error) => {
         if (err) {
@@ -92,7 +92,7 @@ test("Bloat queue route should take a 50x bloated message and return with 200 (g
   return new Promise<void>((resolve, reject) => {
     const length = 50;
     supertest(app)
-      .get(`/${getUniqueName("test-name")}/bloat/${length}`)
+      .get(`/test-name/bloat/${length}`)
       .set("accept-encoding", "gzip")
       .end((err: Error, res: supertest.Response) => {
         if (err) {

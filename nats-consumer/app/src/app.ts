@@ -11,6 +11,8 @@ export const getUniqueName = (name: string): string => {
   }
 
   if (/[\w\d\-]/.test(name) === false) {
+    console.log("invalid name found");
+    console.log(name);
     throw new Error("Name must be alphanumeric characters or dashes");
   }
 
@@ -72,7 +74,14 @@ export default (client: NATS.Client): express.Application => {
     res.setHeader("content-type", "text/plain");
 
     // parsing params
-    const queue = getUniqueName(req.params.queue);
+    let queue;
+    try {
+      queue = getUniqueName(req.params.queue);
+    } catch (err) {
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err.message);
+
+      return;
+    }
 
     // flagging a new queue to have a message published
     client.publish("queues", queue);
@@ -88,7 +97,14 @@ export default (client: NATS.Client): express.Application => {
     res.setHeader("content-type", "text/plain");
 
     // parsing params
-    const queue = getUniqueName(req.params.queue);
+    let queue;
+    try {
+      queue = getUniqueName(req.params.queue);
+    } catch (err) {
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err.message);
+
+      return;
+    }
     const count = Number(req.params.count);
 
     // flagging a new queue to have X messages published
@@ -110,7 +126,14 @@ export default (client: NATS.Client): express.Application => {
     res.setHeader("content-type", "text/plain");
 
     // parsing params and headers
-    const queue = getUniqueName(req.params.queue);
+    let queue;
+    try {
+      queue = getUniqueName(req.params.queue);
+    } catch (err) {
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err.message);
+
+      return;
+    }
     const length = Number(req.params.length);
     const acceptsGzip = req.header("accept-encoding") === "gzip";
 
