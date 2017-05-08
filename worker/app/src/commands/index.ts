@@ -1,11 +1,13 @@
 export { default as NatsConsumer } from "./nats-consumer";
 export { default as NatsProducer } from "./nats-producer";
 export { default as NssPopulate } from "./nss-populate";
-import { ExpectedEnvVars } from "./nats-consumer";
+import { ExpectedEnvVars as NatsConsumerEnvVars } from "./nats-consumer";
+import { ExpectedEnvVars as NatsProducerEnvVars } from "./nats-producer";
+import { ExpectedEnvVars as NssPopulateEnvVars } from "./nss-populate";
+import { ICommandEnvVars } from "./interfaces";
 
-interface ICommandEnvVars {
-  [key: string]: string[];
-}
-export const CommandEnvVars: ICommandEnvVars = {
-  "nats-consumer": ExpectedEnvVars
+export const CommandEnvVarList: ICommandEnvVars = {
+  "nats-consumer": NatsConsumerEnvVars,
+  "nats-producer": NatsProducerEnvVars,
+  "nss-populate": NssPopulateEnvVars
 };

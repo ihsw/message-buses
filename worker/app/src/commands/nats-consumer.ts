@@ -1,7 +1,11 @@
 import { setup } from "../lib/helper";
 import getApp from "../lib/nats-consumer-app";
+import { ConnectionInfo } from "./interfaces";
 
-export const ExpectedEnvVars = ["APP_PORT", "NATS_HOST", "NATS_PORT"];
+export const ExpectedEnvVars: Array<string | ConnectionInfo> = [
+  "APP_PORT",
+  new ConnectionInfo("NATS_HOST", "NATS_PORT")
+];
 export default async (env: any): Promise<void> => {
   // parsing env vars
   const appPort = Number(env["APP_PORT"]);
