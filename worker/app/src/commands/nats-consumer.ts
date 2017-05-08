@@ -7,7 +7,7 @@ export default async (env: any): Promise<void> => {
   const appPort = Number(env["APP_PORT"]);
 
   // connecting
-  const { natsClient, nssClient } = await setup("nats-producer", env);
+  const { natsClient, nssClient } = await setup("nats-consumer", env);
   natsClient.on("error", (err) => { throw err; });
 
   // generating an app
