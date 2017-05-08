@@ -1,6 +1,6 @@
 import * as zlib from "zlib";
-import { setup } from "../lib/helper";
 import { ConnectionInfo } from "./interfaces";
+import { setup } from "../lib/helper";
 
 export const ExpectedEnvVars: Array<string | ConnectionInfo> = [
   new ConnectionInfo("NATS_HOST", "NATS_PORT")

@@ -1,5 +1,5 @@
-import { setup, getFilenames, readFile } from "../lib/helper";
 import { ConnectionInfo } from "./interfaces";
+import { setup, getFilenames, readFile } from "../lib/helper";
 
 export const ExpectedEnvVars: Array<string | ConnectionInfo> = [
   new ConnectionInfo("NATS_HOST", "NATS_PORT")

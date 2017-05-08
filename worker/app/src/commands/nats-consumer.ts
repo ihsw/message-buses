@@ -1,6 +1,6 @@
+import { ConnectionInfo } from "./interfaces";
 import { setup } from "../lib/helper";
 import getApp from "../lib/nats-consumer-app";
-import { ConnectionInfo } from "./interfaces";
 
 export const ExpectedEnvVars: Array<string | ConnectionInfo> = [
   "APP_PORT",
