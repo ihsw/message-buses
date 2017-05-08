@@ -4,7 +4,8 @@
   "description": "",
   "main": "./dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "ava --verbose ./dist/test/*.js ./dist/test/**/*.js",
+    "lint": "tslint ./src/**/*.ts && echo linted",
     "build": "tsc && echo built"
   },
   "author": "",
