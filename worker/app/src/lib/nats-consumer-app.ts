@@ -109,7 +109,7 @@ export default (natsClient: NATS.Client, nssClient: NssClient): express.Applicat
   });
 
   app.get("/store/:storeId", (req, res) => {
-    res.setHeader("content-type", "application/zip, application/octet-stream");
+    res.setHeader("content-type", "text/plain");
 
     // parsing params and headers
     const storeId = req.params.storeId;
@@ -117,8 +117,10 @@ export default (natsClient: NATS.Client, nssClient: NssClient): express.Applicat
     // fetching the store contents
     nssClient.lastMessage(`store-file/${storeId}`, "store-file.workers")
       .then((result) => {
+        res.setHeader("content-type", "application/zip, application/octet-stream");
+
         const msgBuf = Buffer.from((result.getData() as Buffer).toString(), "base64");
-        res.write(msgBuf);
+        res.send(msgBuf);
       })
       .catch((err: Error) => res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err.message));
   });

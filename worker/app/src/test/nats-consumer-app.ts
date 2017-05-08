@@ -130,13 +130,13 @@ test("Rfm file queue route should return with proper content type and 200", asyn
     const storeId = 2301;
     supertest(app)
       .get(`/store/${storeId}`)
-      .expect("content-type", "application/zip, application/octet-stream")
       .end((err: Error, res: supertest.Response) => {
         if (err) {
           return reject(err);
         }
 
         t.is(res.status, HttpStatus.OK, `Status was not OK: ${res.text}`);
+        t.is(res.header["content-type"], "application/zip, application/octet-stream", `Content type was not for zip files: ${res.header["content-type"]}`);
         resolve();
       });
   });
