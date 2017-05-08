@@ -13,7 +13,8 @@ const main = async () => {
   const envVarNames = [
     "NATS_HOST",
     "NATS_PORT",
-    "APP_PORT"
+    "APP_PORT",
+    "COMMAND"
   ];
   const envVarPairs = envVarNames.map((v) => <[string, string]>[v, process.env[v]]);
   const missingEnvVarPairs = envVarPairs.filter(([, v]) => typeof v === "undefined" || v.length === 0);

@@ -1,4 +1,0 @@
-#! /bin/bash
-
-node ./dist/validate-environment.js \
-  && node . nats-producer

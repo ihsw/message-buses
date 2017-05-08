@@ -28,16 +28,16 @@ services:
     ports:
     - "4222:4222"
   nats-producer:
-    build: ./nats-producer
+    build: ./worker
     depends_on:
     - nats-server
     environment:
     - NATS_HOST=nats-server
     - NATS_PORT=4222
     volumes:
-    - ./nats-producer/app:/srv/app
+    - ./worker/app:/srv/app
   nats-consumer:
-    build: ./nats-consumer
+    build: ./worker
     depends_on:
     - nats-server
     - nats-producer
@@ -48,7 +48,7 @@ services:
     - NATS_PORT=4222
     - APP_PORT=80
     volumes:
-    - ./nats-consumer/app:/srv/app
+    - ./worker/app:/srv/app
   nats-consumer-benchmark:
     build: ./benchmark
     environment:
