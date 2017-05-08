@@ -17,12 +17,12 @@ const main = async () => {
   }
 
   // validating that env vars are available
-  const envVarNames = [
+  let envVarNames = [
     "NATS_HOST",
     "NATS_PORT"
   ];
-  if (commandName in CommandEnvVars) {
-    envVarNames.concat(CommandEnvVars[commandName]);
+  if (CommandEnvVars[commandName]) {
+    envVarNames = envVarNames.concat(CommandEnvVars[commandName]);
   }
   const envVarPairs = envVarNames.map((v) => <[string, string]>[v, process.env[v]]);
   const missingEnvVarPairs = envVarPairs.filter(([, v]) => typeof v === "undefined" || v.length === 0);
