@@ -17,10 +17,7 @@ const main = async () => {
   }
 
   // validating that env vars are available
-  let envVarNames = [
-    "NATS_HOST",
-    "NATS_PORT"
-  ];
+  let envVarNames: string[] = [];
   if (CommandEnvVars[commandName]) {
     envVarNames = envVarNames.concat(CommandEnvVars[commandName]);
   }

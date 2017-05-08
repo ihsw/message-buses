@@ -1,5 +1,6 @@
 import { setup, getFilenames, readFile } from "../lib/helper";
 
+export const ExpectedEnvVars = ["NATS_HOST", "NATS_PORT"];
 export default async (env: any, storeDir: string): Promise<void> => {
   // connecting
   const { nssClient } = await setup("nss-populate", env);

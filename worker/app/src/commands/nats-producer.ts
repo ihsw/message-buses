@@ -1,6 +1,7 @@
 import * as zlib from "zlib";
 import { setup } from "../lib/helper";
 
+export const ExpectedEnvVars = ["NATS_HOST", "NATS_PORT"];
 export default async (env: any): Promise<void> => {
   // connecting
   const { natsClient } = await setup("nats-producer", env);
