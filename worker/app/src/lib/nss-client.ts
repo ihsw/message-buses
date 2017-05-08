@@ -46,12 +46,17 @@ export default class {
     return new Promise<NSS.Message>((resolve, reject) => {
       const opts = this.client.subscriptionOptions().setStartWithLastReceived();
       const subscription = this.client.subscribe(subject, queueGroup, opts);
+      const tId = setTimeout(() => reject(new Error("Subscription timeout!")), 2 * 1000);
       subscription.on("message", (msg: NSS.Message) => {
+        clearTimeout(tId);
         resolve(msg);
 
         subscription.unsubscribe();
       });
-      subscription.on("error", reject);
+      subscription.on("error", (err) => {
+        clearTimeout(err);
+        reject(err);
+      });
     });
   }
 }
