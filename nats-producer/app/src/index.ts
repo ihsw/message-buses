@@ -9,7 +9,7 @@ program.version("0.0.1");
 program.command("nss-populate")
   .description("Populates NSS with RFM catalogs")
   .action(() => {
-    NssPopulate(process.env)
+    NssPopulate(process.env, process.cwd())
       .then(() => {
         console.log("Filled NSS with RFM catalogs");
         process.exit(0);

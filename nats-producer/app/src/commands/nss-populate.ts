@@ -1,11 +1,11 @@
 import { setup, getFilenames, readFile } from "../lib/helper";
 
-export default async (env: any): Promise<void> => {
+export default async (env: any, storeDir: string): Promise<void> => {
   // connecting
   const { nssClient } = await setup("nss-populate", env);
 
   // opening the rfm dir
-  const rfmDir = `${process.cwd()}/CommonTestStore300`;
+  const rfmDir = `${storeDir}/CommonTestStore300`;
   const filenames = await getFilenames(rfmDir);
 
   // going over the list of stores
