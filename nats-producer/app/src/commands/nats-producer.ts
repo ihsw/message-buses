@@ -1,9 +1,9 @@
 import * as zlib from "zlib";
 import { setup } from "../lib/helper";
 
-export default async (): Promise<void> => {
+export default async (env: any): Promise<void> => {
   // connecting
-  const { natsClient } = await setup("nats-producer");
+  const { natsClient } = await setup("nats-producer", env);
   natsClient.on("error", (err) => { throw err; });
 
   // setting up nats queues

@@ -1,7 +1,6 @@
 import * as process from "process";
 import * as program from "commander";
-import nssPopulateMain from "./commands/nss-populate";
-import natsProducer from "./commands/nats-producer";
+import { NatsConsumer, NatsProducer, NssPopulate } from "./commands";
 
 // program definition
 program.version("0.0.1");
@@ -10,7 +9,7 @@ program.version("0.0.1");
 program.command("nss-populate")
   .description("Populates NSS with RFM catalogs")
   .action(() => {
-    nssPopulateMain()
+    NssPopulate(process.env)
       .then(() => {
         console.log("Filled NSS with RFM catalogs");
         process.exit(0);
@@ -23,10 +22,26 @@ program.command("nss-populate")
 
 // listening on queues for testing throughput
 program.command("nats-producer")
-  .description("Listens on queues for testing throughput")  .action(() => {
-    natsProducer()
+  .description("Listens on queues for testing throughput")
+  .action(() => {
+    NatsProducer(process.env)
       .then(() => {
         console.log("Listening on queues");
+        process.on("SIGINT", () => process.exit(0));
+      })
+      .catch((err) => {
+        console.error(err);
+        process.exit(1);
+      });
+  });
+
+// listening on http for testing throughput
+program.command("nats-consumer")
+  .description("Listening on http for testing throughput")
+  .action(() => {
+    NatsConsumer(process.env)
+      .then(() => {
+        console.log(`Listening on ${process.env["APP_PORT"]}`);
         process.on("SIGINT", () => process.exit(0));
       })
       .catch((err) => {

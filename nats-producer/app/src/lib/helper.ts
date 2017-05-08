@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as NATS from "nats";
+import * as uuid from "uuid";
 import NssClient from "./nss-client";
 import getNatsClient from "./nats-client";
 
@@ -7,9 +8,9 @@ interface SetupData {
   natsClient: NATS.Client;
   nssClient: NssClient;
 }
-export const setup = async (name: string): Promise<SetupData> => {
+export const setup = async (name: string, env: any): Promise<SetupData> => {
   // connecting nats client
-  const natsClient = getNatsClient(name, process.env);
+  const natsClient = getNatsClient(name, env);
   natsClient.on("error", (err: NATS.NatsError) => { throw err; });
 
   // connecting nss client
@@ -41,4 +42,16 @@ export const readFile = (path: string): Promise<Buffer> => {
       resolve(data);
     });
   });
+};
+
+export const getUniqueName = (name: string): string => {
+  if (name.length === 0) {
+    throw new Error("Name must not be blank");
+  }
+
+  if (/[\w\d\-]/.test(name) === false) {
+    throw new Error("Name must be alphanumeric characters or dashes");
+  }
+
+  return `${name}-${uuid.v4()}`;
 };
