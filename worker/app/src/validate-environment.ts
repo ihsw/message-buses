@@ -1,4 +1,5 @@
 import * as net from "net";
+import { CommandEnvVars } from "./commands";
 
 // misc
 const netConnect = (port: number, host: string): Promise<void> => {
@@ -9,13 +10,20 @@ const netConnect = (port: number, host: string): Promise<void> => {
 };
 
 const main = async () => {
+  // gathering command name
+  const commandName = String(process.env["COMMAND"]);
+  if (commandName.length === 0) {
+    throw new Error("Command expected!");
+  }
+
   // validating that env vars are available
   const envVarNames = [
     "NATS_HOST",
-    "NATS_PORT",
-    "APP_PORT",
-    "COMMAND"
+    "NATS_PORT"
   ];
+  if (commandName in CommandEnvVars) {
+    envVarNames.concat(CommandEnvVars[commandName]);
+  }
   const envVarPairs = envVarNames.map((v) => <[string, string]>[v, process.env[v]]);
   const missingEnvVarPairs = envVarPairs.filter(([, v]) => typeof v === "undefined" || v.length === 0);
   if (missingEnvVarPairs.length > 0) {
