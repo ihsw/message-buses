@@ -52,3 +52,9 @@ program.command("nats-consumer")
 
 // parsing process args
 program.parse(process.argv);
+
+// optionally dumping help when no command is provided
+if (process.argv.slice(2).length === 0) {
+  program.outputHelp();
+  process.exit(1);
+}
