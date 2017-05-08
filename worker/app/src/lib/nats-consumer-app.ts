@@ -120,7 +120,7 @@ export default (natsClient: NATS.Client, nssClient: NssClient): express.Applicat
         const msgBuf = Buffer.from((result.getData() as Buffer).toString(), "base64");
         res.write(msgBuf);
       })
-      .catch((err) => res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err.message));
+      .catch((err: Error) => res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err.message));
   });
 
   app.get("/:queue/bloat/:length", (req, res) => {
