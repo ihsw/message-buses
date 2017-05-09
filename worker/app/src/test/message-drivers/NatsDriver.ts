@@ -11,9 +11,9 @@ test.before(async () => {
 });
 
 test("Driver should publish", async (t) => {
-  await messageDriver.publish("publish-test", "Hello, world!");
-
   t.pass();
+
+  return messageDriver.publish("publish-test", "Hello, world!");
 });
 
 test("Driver should subscribe", async (t) => {
@@ -44,4 +44,10 @@ test("Driver should unsubscribe", async (t) => {
   messageDriver.unsubscribe(sId);
 
   t.pass();
+});
+
+test("Driver should publish persist", async (t) => {
+  t.pass();
+
+  return messageDriver.publishPersist("publish-test", "Hello, world!");
 });
