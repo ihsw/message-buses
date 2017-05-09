@@ -1,6 +1,7 @@
 import * as zlib from "zlib";
 import * as express from "express";
 import * as HttpStatus from "http-status";
+import { wrap } from "async-middleware";
 import { IMessageDriver, ISubscribeOptions } from "../message-drivers/IMessageDriver";
 import { getUniqueName } from "../lib/helper";
 
@@ -116,22 +117,24 @@ export default (messageDriver: IMessageDriver): express.Application => {
     });
   });
 
-  app.get("/store/:storeId", (req, res) => {
+  app.get("/store/:storeId", wrap(async (req: express.Request, res: express.Response) => {
     res.setHeader("content-type", "text/plain");
 
     // parsing params and headers
     const storeId = req.params.storeId;
 
     // fetching the store contents
-    messageDriver.lastPersistMessage(`store-file/${storeId}`)
-      .then((result) => {
-        res.setHeader("content-type", "application/zip, application/octet-stream");
-
-        const msgBuf = Buffer.from(result, "base64");
-        res.send(msgBuf);
-      })
-      .catch((err: Error) => res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err.message));
-  });
+    let result;
+    try {
+      result = await messageDriver.lastPersistMessage(`store-file/${storeId}`);
+    } catch (err) {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err.message);
+    }
+    
+    res.setHeader("content-type", "application/zip, application/octet-stream");
+    const msgBuf = Buffer.from(result, "base64");
+    res.send(msgBuf);
+  }));
 
   app.get("/:queue/bloat/:length", (req, res) => {
     res.setHeader("content-type", "text/plain");
