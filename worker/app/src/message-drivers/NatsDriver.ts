@@ -32,17 +32,27 @@ export class NatsDriver implements IMessageDriver {
 
   subscribe(opts: ISubscribeOptions) {
     const sId = this.natsClient.subscribe(opts.queue, (msg) => opts.callback(msg, sId));
-    this.natsClient.timeout(sId, opts.timeoutInMs, 0, () => opts.timeoutCallback);
+
+    if (opts.timeoutInMs) {
+      const cb = opts.timeoutCallback ? opts.timeoutCallback : () => { return; };
+      this.natsClient.timeout(sId, opts.timeoutInMs, 0, cb);
+    }
   }
 
   subscribePersist(opts: ISubscribePersistOptions) {
     const subscribeOpts = this.nssClient.subscriptionOptions();
     const subscription = this.nssClient.subscribe(opts.queue, `${opts.queue}.workers`, subscribeOpts);
-    const tId = setTimeout(() => {
-      opts.timeoutCallback();
-    });
+
+    let tId;
+    if (opts.timeoutInMs) {
+      const cb = opts.timeoutCallback ? opts.timeoutCallback : () => { return; };
+      tId = setTimeout(() => cb, opts.timeoutInMs);
+    }
+
     subscription.on("message", (msg: NSS.Message) => {
-      clearTimeout(tId);
+      if (tId) {
+        clearTimeout(tId);
+      }
 
       // resolving the message data
       let result: string;

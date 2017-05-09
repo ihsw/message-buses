@@ -1,8 +1,8 @@
 export interface ISubscribeOptions {
   queue: string;
   callback: ISubscribeCallback;
-  timeoutInMs: number;
-  timeoutCallback: ISubscribeTimeoutCallback;
+  timeoutInMs?: number;
+  timeoutCallback?: ISubscribeTimeoutCallback;
 }
 
 export interface ISubscribeCallback {
