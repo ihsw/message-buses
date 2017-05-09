@@ -24,7 +24,7 @@ export interface ISubscribeTimeoutCallback {
 export interface IMessageDriver {
   subscribe(opts: ISubscribeOptions);
   unsubscribe(sId: number);
-  publish(queue: string, message: string);
+  publish(queue: string, message: string): Promise<void>;
 
   subscribePersist(opts: ISubscribePersistOptions);
   publishPersist(queue: string, message: string): Promise<string>;
