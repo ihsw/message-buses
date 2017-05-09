@@ -2,18 +2,17 @@ import * as process from "process";
 import { test } from "ava";
 import * as supertest from "supertest";
 import * as HttpStatus from "http-status";
-import getApp from "../lib/nats-consumer-app";
-import { getUniqueName, setup } from "../lib/helper";
+import { GetDriver } from "../message-drivers/NatsDriver";
+import { getUniqueName } from "../lib/helper";
+import getApp from "../lib/consumer-app";
 
-let natsClient, nssClient;
+let messageDriver;
 test.before(async () => {
-  const connections = await setup("nats-consumer-app-tests", process.env);
-  natsClient = connections.natsClient;
-  nssClient = connections.nssClient;
+  messageDriver = await GetDriver("nats-consumer-app-tests", "ecp4", process.env)
 });
 
 test("Timeout route should fail with 500", async (t) => {
-  const app = getApp(natsClient, nssClient);
+  const app = getApp(messageDriver);
 
   return new Promise<void>((resolve, reject) => {
     supertest(app)
@@ -31,7 +30,7 @@ test("Timeout route should fail with 500", async (t) => {
 });
 
 test("Queue route should return with 200", async (t) => {
-  const app = getApp(natsClient, nssClient);
+  const app = getApp(messageDriver);
 
   return new Promise<void>((resolve, reject) => {
     supertest(app)
@@ -49,7 +48,7 @@ test("Queue route should return with 200", async (t) => {
 });
 
 test("Queue route should fail on invalid queue name", async (t) => {
-  const app = getApp(natsClient, nssClient);
+  const app = getApp(messageDriver);
 
   return new Promise<void>((resolve, reject) => {
     supertest(app)
@@ -67,7 +66,7 @@ test("Queue route should fail on invalid queue name", async (t) => {
 });
 
 test("Count queue route should take 500 messages and return with 200", async (t) => {
-  const app = getApp(natsClient, nssClient);
+  const app = getApp(messageDriver);
 
   return new Promise<void>((resolve, reject) => {
     supertest(app)
@@ -85,7 +84,7 @@ test("Count queue route should take 500 messages and return with 200", async (t)
 });
 
 test("Bloat queue route should take a 50x bloated message and return with 200 (non-gzip response)", async (t) => {
-  const app = getApp(natsClient, nssClient);
+  const app = getApp(messageDriver);
 
   return new Promise<void>((resolve, reject) => {
     const length = 50;
@@ -104,7 +103,7 @@ test("Bloat queue route should take a 50x bloated message and return with 200 (n
 });
 
 test("Bloat queue route should take a 50x bloated message and return with 200 (gzip response)", async (t) => {
-  const app = getApp(natsClient, nssClient);
+  const app = getApp(messageDriver);
 
   return new Promise<void>((resolve, reject) => {
     const length = 50;
@@ -124,7 +123,7 @@ test("Bloat queue route should take a 50x bloated message and return with 200 (g
 });
 
 test("Rfm file queue route should return with proper content type and 200", async (t) => {
-  const app = getApp(natsClient, nssClient);
+  const app = getApp(messageDriver);
 
   return new Promise<void>((resolve, reject) => {
     const storeId = 2301;
