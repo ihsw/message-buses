@@ -1,8 +1,6 @@
 import * as zlib from "zlib";
-import * as NATS from "nats";
 import * as express from "express";
 import * as HttpStatus from "http-status";
-import NssClient from "../lib/nss-client";
 import { IMessageDriver, ISubscribeOptions } from "../message-drivers/IMessageDriver";
 import { getUniqueName } from "../lib/helper";
 
