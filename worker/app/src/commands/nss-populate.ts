@@ -1,12 +1,13 @@
+import { GetDriver } from "../message-drivers/NatsDriver";
 import { ConnectionInfo } from "./interfaces";
-import { setup, getFilenames, readFile } from "../lib/helper";
+import { getFilenames, readFile } from "../lib/helper";
 
 export const ExpectedEnvVars: Array<string | ConnectionInfo> = [
   new ConnectionInfo("NATS_HOST", "NATS_PORT")
 ];
 export default async (env: any, storeDir: string): Promise<void> => {
   // connecting
-  const { nssClient } = await setup("nss-populate", env);
+  const messageDriver = await GetDriver("nss-populate", "ecp4", env);
 
   // opening the rfm dir
   const rfmDir = `${storeDir}/CommonTestStore300`;
@@ -21,7 +22,7 @@ export default async (env: any, storeDir: string): Promise<void> => {
     }
 
     const fileContents = await readFile(`${rfmDir}/${filename}`);
-    const publishId = await nssClient.publish(`store-file/${storeId}`, fileContents.toString("base64"));
+    const publishId = await messageDriver.publishPersist(`store-file/${storeId}`, fileContents.toString("base64"));
     console.log(publishId);
   }
 };
