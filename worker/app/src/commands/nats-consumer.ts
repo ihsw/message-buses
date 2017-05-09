@@ -1,6 +1,6 @@
+import { GetDriver } from "../message-drivers/NatsDriver";
 import { ConnectionInfo } from "./interfaces";
-import { setup } from "../lib/helper";
-import getApp from "../lib/nats-consumer-app";
+import getApp from "../lib/consumer-app";
 
 export const ExpectedEnvVars: Array<string | ConnectionInfo> = [
   "APP_PORT",
@@ -11,11 +11,10 @@ export default async (env: any): Promise<void> => {
   const appPort = Number(env["APP_PORT"]);
 
   // connecting
-  const { natsClient, nssClient } = await setup("nats-consumer", env);
-  natsClient.on("error", (err) => { throw err; });
+  const messageDriver = await GetDriver("nats-consumer", "ecp4", env);
 
   // generating an app
-  const app = getApp(natsClient, nssClient);
+  const app = getApp(messageDriver);
 
   // listening on app port
   app.listen(appPort);

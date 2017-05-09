@@ -1,24 +1,5 @@
 import * as fs from "fs";
-import * as NATS from "nats";
 import * as uuid from "uuid";
-import NssClient from "./nss-client";
-import getNatsClient from "./nats-client";
-
-interface SetupData {
-  natsClient: NATS.Client;
-  nssClient: NssClient;
-}
-export const setup = async (name: string, env: any): Promise<SetupData> => {
-  // connecting nats client
-  const natsClient = getNatsClient(name, env);
-  natsClient.on("error", (err: NATS.NatsError) => { throw err; });
-
-  // connecting nss client
-  const nssClient = new NssClient(natsClient, "ecp4", name);
-  await nssClient.connect();
-
-  return <SetupData>{ natsClient, nssClient };
-};
 
 export const getFilenames = (dirPath: string): Promise<string[]> => {
   return new Promise<string[]>((resolve, reject) => {
