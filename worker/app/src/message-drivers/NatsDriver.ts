@@ -71,8 +71,8 @@ export class NatsDriver implements IMessageDriver {
     this.natsClient.unsubscribe(sId);
   }
 
-  publish(queue: string, message: string | Buffer) {
-    this.natsClient.publish(queue, message);
+  publish(queue: string, message: string | Buffer): Promise<void> {
+    return new Promise<void>((resolve) => this.natsClient.publish(queue, message, resolve));
   }
 
   publishPersist(queue: string, message: string): Promise<string> {
