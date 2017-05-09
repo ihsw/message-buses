@@ -6,7 +6,8 @@
   "scripts": {
     "test": "ava --verbose ./dist/test/*.js ./dist/test/**/*.js",
     "lint": "tslint ./src/**/*.ts && echo linted",
-    "build": "tsc && echo built"
+    "build": "tsc && echo built",
+    "ava": "ava --verbose"
   },
   "author": "",
   "license": "ISC",
