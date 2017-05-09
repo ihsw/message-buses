@@ -12,8 +12,12 @@ export class NatsDriver implements IMessageDriver {
   }
 
   subscribe(opts: ISubscribeOptions) {
-    const sId = this.natsClient.subscribe(opts.queue, opts.callback);
+    const sId = this.natsClient.subscribe(opts.queue, (msg) => opts.callback(msg, sId));
     this.natsClient.timeout(sId, opts.timeoutInMs, 0, () => opts.timeoutCallback);
+  }
+
+  unsubscribe(sId: number) {
+    this.natsClient.unsubscribe(sId);
   }
 
   publish(queue: string, message: string | Buffer) {

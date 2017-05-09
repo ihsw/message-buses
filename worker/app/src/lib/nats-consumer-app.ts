@@ -3,6 +3,7 @@ import * as NATS from "nats";
 import * as express from "express";
 import * as HttpStatus from "http-status";
 import NssClient from "../lib/nss-client";
+import { IMessageDriver, ISubscribeOptions } from "../message-drivers/IMessageDriver";
 import { getUniqueName } from "../lib/helper";
 
 // global queue timeout
@@ -12,7 +13,7 @@ const queueTimeout = 10 * 1000;
 interface SubscribeCallback {
   (tId: NodeJS.Timer, sId: number, msg: string);
 }
-const subscribe = (natsClient: NATS.Client, req: express.Request, res: express.Response, subject: string, cb: SubscribeCallback) => {
+const subscribe = (messageDriver: IMessageDriver, req: express.Request, res: express.Response, subject: string, cb: SubscribeCallback) => {
   const tId = setTimeout(() => {
     if (res.headersSent) {
       return;
@@ -21,20 +22,25 @@ const subscribe = (natsClient: NATS.Client, req: express.Request, res: express.R
     res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Request timeout!");
   }, queueTimeout * 2);
 
-  const sId = natsClient.subscribe(subject, (msg) => cb(tId, sId, msg));
+  messageDriver.subscribe(<ISubscribeOptions>{
+    queue: subject,
+    callback: (msg, sId) => cb(tId, sId, msg),
+    timeoutInMs: queueTimeout,
+    timeoutCallback: () => {
+      console.log(`Queue timeout on ${subject} timed out at ${req.originalUrl}`);
 
-  natsClient.timeout(sId, queueTimeout, 0, () => {
-    console.log(`Queue timeout on ${subject} timed out at ${req.originalUrl}`);
-    if (res.headersSent) {
-      return;
+      clearTimeout(tId);
+
+      if (res.headersSent) {
+        return;
+      }
+
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Queue timeout");
     }
-
-    clearTimeout(tId);
-    res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Queue timeout!");
   });
 };
 
-export default (natsClient: NATS.Client, nssClient: NssClient): express.Application => {
+export default (messageDriver: IMessageDriver): express.Application => {
   // setting up an express app
   const app = express();
 
@@ -49,10 +55,14 @@ export default (natsClient: NATS.Client, nssClient: NssClient): express.Applicat
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Request timeout!");
     }, queueTimeout * 2);
 
-    const sId = natsClient.subscribe("invalid-queue", () => { return; });
-    natsClient.timeout(sId, queueTimeout, 0, (timeoutSid) => {
-      clearTimeout(tId);
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(`Timed out with sid ${timeoutSid}!`);
+    messageDriver.subscribe(<ISubscribeOptions>{
+      queue: "invalid-queue",
+      callback: () => res.status(HttpStatus.OK).send(),
+      timeoutInMs: queueTimeout,
+      timeoutCallback: (sId) => {
+        clearTimeout(tId);
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(`Timed out with sid ${sId}!`);
+      }
     });
   });
 

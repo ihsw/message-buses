@@ -6,14 +6,16 @@ export interface ISubscribeOptions {
 }
 
 export interface ISubscribeCallback {
-  (msg: string | Buffer): void;
+  (msg: string, sId: number): void;
 }
 
 export interface ISubscribeTimeoutCallback {
-  (): void;
+  (sId: number): void;
 }
 
 export interface IMessageDriver {
   subscribe(opts: ISubscribeOptions);
-  publish(queue: string, message: string | Buffer);
+  unsubscribe(sId: number);
+  publish(queue: string, message: string);
+  lastMessage(queue: string): Promise<string>;
 }
