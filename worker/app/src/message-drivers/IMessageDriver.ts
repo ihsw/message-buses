@@ -22,7 +22,7 @@ export interface ISubscribeTimeoutCallback {
 }
 
 export interface IMessageDriver {
-  subscribe(opts: ISubscribeOptions);
+  subscribe(opts: ISubscribeOptions): number;
   unsubscribe(sId: number);
   publish(queue: string, message: string): Promise<void>;
 

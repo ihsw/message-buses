@@ -38,6 +38,8 @@ export class NatsDriver implements IMessageDriver {
       const cb = opts.timeoutCallback ? opts.timeoutCallback : () => { return; };
       this.natsClient.timeout(sId, opts.timeoutInMs, 0, cb);
     }
+
+    return sId;
   }
 
   subscribePersist(opts: ISubscribePersistOptions) {
