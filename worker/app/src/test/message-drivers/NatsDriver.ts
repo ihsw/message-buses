@@ -77,3 +77,12 @@ test("Driver should subscribe persist", async (t) => {
     messageDriver.publishPersist(queue, msg).catch(reject);
   });
 });
+
+test("Driver should get last persist message", async (t) => {
+  const queue = "last-persist-message-test";
+  const msg = "Hello, world!";
+
+  await messageDriver.publishPersist(queue, msg);
+  const receivedMsg = await messageDriver.lastPersistMessage(queue);
+  t.is(msg, receivedMsg, "Last message received did not match published one");
+});
