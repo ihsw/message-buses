@@ -98,7 +98,7 @@ export class NatsDriver implements IMessageDriver {
         } else {
           result = <string>msg.getData();
         }
-        
+
         resolve(result);
       });
     });

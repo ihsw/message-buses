@@ -132,7 +132,7 @@ export default (messageDriver: IMessageDriver): express.Application => {
     } catch (err) {
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err.message);
     }
-    
+
     res.setHeader("content-type", "application/zip, application/octet-stream");
     const msgBuf = Buffer.from(result, "base64");
     res.send(msgBuf);

@@ -10,7 +10,7 @@ import getApp from "../lib/consumer-app";
 
 let messageDriver;
 test.before(async () => {
-  messageDriver = await GetDriver("nats-consumer-app-tests", "ecp4", process.env)
+  messageDriver = await GetDriver("nats-consumer-app-tests", "ecp4", process.env);
 });
 
 test("Timeout route should fail with 500", async (t) => {
