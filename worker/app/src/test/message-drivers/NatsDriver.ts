@@ -37,3 +37,11 @@ test("Driver should subscribe", async (t) => {
     messageDriver.publish(queue, msg).catch(reject);
   });
 });
+
+test("Driver should unsubscribe", async (t) => {
+  const queue = "unsubscribe-test";
+  const sId = messageDriver.subscribe(<ISubscribeOptions>{ queue: queue });
+  messageDriver.unsubscribe(sId);
+
+  t.pass();
+});
