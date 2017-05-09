@@ -1,5 +1,7 @@
 import * as process from "process";
+
 import * as program from "commander";
+
 import { NatsConsumer, NatsProducer, NssPopulate } from "./commands";
 
 // program definition

@@ -1,4 +1,5 @@
 import * as zlib from "zlib";
+
 import { ConnectionInfo } from "./interfaces";
 import { GetDriver } from "../message-drivers/NatsDriver";
 

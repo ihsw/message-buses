@@ -1,7 +1,9 @@
 import * as process from "process";
+
 import { test } from "ava";
 import * as supertest from "supertest";
 import * as HttpStatus from "http-status";
+
 import { GetDriver } from "../message-drivers/NatsDriver";
 import { getUniqueName } from "../lib/helper";
 import getApp from "../lib/consumer-app";
