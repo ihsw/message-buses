@@ -2,7 +2,11 @@ import * as process from "process";
 
 import { test } from "ava";
 
-import { IMessageDriver, ISubscribeOptions } from "../../message-drivers/IMessageDriver";
+import {
+  IMessageDriver,
+  ISubscribeOptions,
+  ISubscribePersistOptions
+} from "../../message-drivers/IMessageDriver";
 import { GetDriver } from "../../message-drivers/NatsDriver";
 
 let messageDriver: IMessageDriver;
@@ -50,4 +54,26 @@ test("Driver should publish persist", async (t) => {
   t.pass();
 
   return messageDriver.publishPersist("publish-test", "Hello, world!");
+});
+
+test("Driver should subscribe persist", async (t) => {
+  return new Promise<void>((resolve, reject) => {
+    const queue = "subscribe-persist-test";
+    const msg = "Hello, world!";
+
+    // setting up a subscribe handler
+    messageDriver.subscribePersist(<ISubscribePersistOptions>{
+      queue: queue,
+      callback: (receivedMsg) => {
+        t.is(receivedMsg, msg, "Message from subscription matches published message");
+
+        resolve();
+      },
+      timeoutInMs: 2 * 1000,
+      timeoutCallback: () => reject(new Error(`Subscription timed out!`))
+    });
+
+    // publishing out a message
+    messageDriver.publishPersist(queue, msg).catch(reject);
+  });
 });
