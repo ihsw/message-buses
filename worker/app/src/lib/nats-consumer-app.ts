@@ -80,11 +80,11 @@ export default (messageDriver: IMessageDriver): express.Application => {
     }
 
     // flagging a new queue to have a message published
-    natsClient.publish("queues", queue);
+    messageDriver.publish("queues", queue);
 
-    subscribe(natsClient, req, res, queue, (tId, sId, msg) => {
-      natsClient.unsubscribe(sId);
+    subscribe(messageDriver, req, res, queue, (tId, sId, msg) => {
       clearTimeout(tId);
+      messageDriver.unsubscribe(sId);
       res.send(msg);
     });
   });
@@ -104,14 +104,14 @@ export default (messageDriver: IMessageDriver): express.Application => {
     const count = Number(req.params.count);
 
     // flagging a new queue to have X messages published
-    natsClient.publish("queueWaiting", JSON.stringify({ count: count, queue: queue }));
+    messageDriver.publish("queueWaiting", JSON.stringify({ count: count, queue: queue }));
 
     let messageCount = 0;
-    subscribe(natsClient, req, res, queue, (tId, sId, msg) => {
+    subscribe(messageDriver, req, res, queue, (tId, sId, msg) => {
       res.write(`${msg}\n`);
 
       if (++messageCount === count) {
-        natsClient.unsubscribe(sId);
+        messageDriver.unsubscribe(sId);
         clearTimeout(tId);
         res.end();
       }
@@ -125,11 +125,11 @@ export default (messageDriver: IMessageDriver): express.Application => {
     const storeId = req.params.storeId;
 
     // fetching the store contents
-    nssClient.lastMessage(`store-file/${storeId}`, "store-file.workers")
+    messageDriver.lastMessage(`store-file/${storeId}`)
       .then((result) => {
         res.setHeader("content-type", "application/zip, application/octet-stream");
 
-        const msgBuf = Buffer.from((result.getData() as Buffer).toString(), "base64");
+        const msgBuf = Buffer.from(result, "base64");
         res.send(msgBuf);
       })
       .catch((err: Error) => res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err.message));
@@ -151,10 +151,10 @@ export default (messageDriver: IMessageDriver): express.Application => {
     const acceptsGzip = req.header("accept-encoding") === "gzip";
 
     // flagging a new queue to have messages of size X thousand zeroes
-    natsClient.publish("queueBloating", JSON.stringify({ length: length, queue: queue }));
+    messageDriver.publish("queueBloating", JSON.stringify({ length: length, queue: queue }));
 
-    subscribe(natsClient, req, res, queue, (tId, sId, msg) => {
-      natsClient.unsubscribe(sId);
+    subscribe(messageDriver, req, res, queue, (tId, sId, msg) => {
+      messageDriver.unsubscribe(sId);
       clearTimeout(tId);
 
       const msgBuf = Buffer.from(msg, "base64");
