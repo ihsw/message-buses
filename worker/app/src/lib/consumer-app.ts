@@ -123,7 +123,7 @@ export default (messageDriver: IMessageDriver): express.Application => {
     const storeId = req.params.storeId;
 
     // fetching the store contents
-    messageDriver.lastMessage(`store-file/${storeId}`)
+    messageDriver.lastPersistMessage(`store-file/${storeId}`)
       .then((result) => {
         res.setHeader("content-type", "application/zip, application/octet-stream");
 
