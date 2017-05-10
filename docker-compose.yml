@@ -1,6 +1,26 @@
 version: '3'
 
 services:
+  influxdb-server:
+    build: ./influxdb-server
+    ports:
+    - "8083:8083"
+    - "8086:8086"
+  influxdb-frontend:
+    build: ./influxdb-frontend
+    ports:
+    - "80:3000"
+    depends_on:
+    - influxdb-server
+  telegraf-collector:
+    build: ./telegraf-collector
+    depends_on:
+    - influxdb-server
+    environment:
+    - INFLUXDB_HOST=influxdb-server
+    volumes:
+    - ./telegraf-collector/app:/srv/app
+
   kafka-zookeeper:
     image: wurstmeister/zookeeper
     ports:
