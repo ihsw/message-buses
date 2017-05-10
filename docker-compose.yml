@@ -3,9 +3,6 @@ version: '3'
 services:
   influxdb-server:
     build: ./influxdb-server
-    ports:
-    - "8083:8083"
-    - "8086:8086"
   influxdb-frontend:
     build: ./influxdb-frontend
     ports:
@@ -24,14 +21,10 @@ services:
 
   kafka-zookeeper:
     image: wurstmeister/zookeeper
-    ports:
-    - "2181:2181"
   kafka-server:
     depends_on:
     - kafka-zookeeper
     image: wurstmeister/kafka
-    ports:
-    - "9092:9092"
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
     environment:
@@ -41,13 +34,9 @@ services:
     build: ./kafka-producer
   kafka-consumer:
     build: ./kafka-consumer
-    ports:
-    - "80:80"
 
   nats-server:
     build: ./nats-server
-    ports:
-    - "4222:4222"
   nats-producer:
     build: ./worker
     depends_on:
@@ -62,8 +51,6 @@ services:
     depends_on:
     - nats-server
     - nats-producer
-    ports:
-    - "80:80"
     environment:
     - NATS_HOST=nats-server
     - NATS_PORT=4222
