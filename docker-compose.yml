@@ -50,7 +50,6 @@ services:
     build: ./worker
     depends_on:
     - nats-server
-    - nats-producer
     environment:
     - NATS_HOST=nats-server
     - NATS_PORT=4222
@@ -59,10 +58,6 @@ services:
     - ./worker/app:/srv/app
   nats-consumer-benchmark:
     build: ./benchmark
-    depends_on:
-    - nats-consumer
-    environment:
-    - TARGET_HOST=nats-consumer
     volumes:
     - ./benchmark/app:/srv/app
   nats-top:
