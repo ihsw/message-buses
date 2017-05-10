@@ -1,4 +1,5 @@
 import * as zlib from "zlib";
+import * as process from "process";
 
 import * as express from "express";
 import * as HttpStatus from "http-status";
@@ -23,9 +24,17 @@ const subscribe = (messageDriver: IMessageDriver, req: express.Request, res: exp
     res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Request timeout!");
   }, queueTimeout * 2);
 
+  let startTime = process.hrtime();
   messageDriver.subscribe(<ISubscribeOptions>{
     queue: subject,
-    callback: (msg, sId) => cb(tId, sId, msg),
+    callback: (msg, sId) => {
+      const [endTimeInSeconds, endTimeInNanoseconds] = process.hrtime(startTime);
+      const endTimeInMs = ((endTimeInSeconds * 1000) + (endTimeInNanoseconds / 1000 / 1000)).toFixed(2);
+      startTime = process.hrtime();
+
+      console.log(`Response time: ${endTimeInMs}ms`);
+      cb(tId, sId, msg);
+    },
     timeoutInMs: queueTimeout,
     timeoutCallback: () => {
       console.log(`Queue timeout on ${subject} timed out at ${req.originalUrl}`);
