@@ -2,6 +2,9 @@ import * as process from "process";
 
 import { test } from "ava";
 
+import GetInflux from "../../lib/influx";
+import { defaultAppName } from "../../lib/test-helper";
+
 import {
   IMessageDriver,
   ISubscribeOptions,
@@ -11,7 +14,8 @@ import { GetDriver } from "../../message-drivers/NatsDriver";
 
 let messageDriver: IMessageDriver;
 test.before(async () => {
-  messageDriver = await GetDriver("nats-driver-test", "ecp4", process.env);
+  const influx = await GetInflux(defaultAppName, process.env);
+  messageDriver = await GetDriver(influx, "nats-driver-test", "ecp4", process.env);
 });
 
 test("Driver should publish", async (t) => {

@@ -7,10 +7,13 @@ import * as HttpStatus from "http-status";
 import { GetDriver } from "../message-drivers/NatsDriver";
 import { getUniqueName } from "../lib/helper";
 import getApp from "../lib/consumer-app";
+import GetInflux from "../lib/influx";
+import { defaultAppName } from "../lib/test-helper";
 
 let messageDriver;
 test.before(async () => {
-  messageDriver = await GetDriver("nats-consumer-app-tests", "ecp4", process.env);
+  const influx = await GetInflux(defaultAppName, process.env);
+  messageDriver = await GetDriver(influx, "nats-consumer-app-test", "ecp4", process.env);
 });
 
 test("Timeout route should fail with 500", async (t) => {

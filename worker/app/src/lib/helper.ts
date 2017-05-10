@@ -2,6 +2,8 @@ import * as fs from "fs";
 
 import * as uuid from "uuid";
 
+export const defaultAppName = "ecp4";
+
 export const getFilenames = (dirPath: string): Promise<string[]> => {
   return new Promise<string[]>((resolve, reject) => {
     fs.readdir(dirPath, (err, files) => {

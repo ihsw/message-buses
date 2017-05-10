@@ -1,9 +1,11 @@
+import { InfluxDB } from "influx";
 import * as NATS from "nats";
 import * as NSS from "node-nats-streaming";
 
+import AbstractMessageDriver from "./AbstractMessageDriver";
 import { IMessageDriver, ISubscribeOptions, ISubscribePersistOptions } from "./IMessageDriver";
 
-export const GetDriver = async (name: string, clusterId: string, env: any): Promise<NatsDriver> => {
+export const GetDriver = async (influx: InfluxDB, name: string, clusterId: string, env: any): Promise<NatsDriver> => {
   return new Promise<NatsDriver>((resolve) => {
     // parsing env vars
     const natsHost = env["NATS_HOST"];
@@ -18,15 +20,17 @@ export const GetDriver = async (name: string, clusterId: string, env: any): Prom
 
     // connecting to nss
     const nssClient = NSS.connect(clusterId, name, <NSS.StanOptions>{ nc: natsClient });
-    nssClient.on("connect", () => resolve(new NatsDriver(natsClient, nssClient)));
+    nssClient.on("connect", () => resolve(new NatsDriver(influx, natsClient, nssClient)));
   });
 };
 
-export class NatsDriver implements IMessageDriver {
+export class NatsDriver extends AbstractMessageDriver implements IMessageDriver {
   natsClient: NATS.Client;
   nssClient: NSS.Stan;
 
-  constructor(natsClient: NATS.Client, nssClient: NSS.Stan) {
+  constructor(influx: InfluxDB, natsClient: NATS.Client, nssClient: NSS.Stan) {
+    super(influx);
+
     this.natsClient = natsClient;
     this.nssClient = nssClient;
   }

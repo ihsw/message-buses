@@ -1,13 +1,16 @@
 import { GetDriver } from "../message-drivers/NatsDriver";
 import { ConnectionInfo } from "./interfaces";
 import { getFilenames, readFile } from "../lib/helper";
+import GetInflux from "../lib/influx";
+import { defaultAppName } from "../lib/helper";
 
 export const ExpectedEnvVars: Array<string | ConnectionInfo> = [
   new ConnectionInfo("NATS_HOST", "NATS_PORT")
 ];
 export default async (env: any, storeDir: string): Promise<void> => {
   // connecting
-  const messageDriver = await GetDriver("nss-populate", "ecp4", env);
+  const influx = await GetInflux(defaultAppName, env);
+  const messageDriver = await GetDriver(influx, "nss-populate", "ecp4", env);
 
   // opening the rfm dir
   const rfmDir = `${storeDir}/CommonTestStore300`;

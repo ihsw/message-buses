@@ -1,3 +1,5 @@
+import { InfluxDB } from "influx";
+
 export interface ISubscribeOptions {
   queue: string;
   callback: ISubscribeCallback;
@@ -22,6 +24,8 @@ export interface ISubscribeTimeoutCallback {
 }
 
 export interface IMessageDriver {
+  influx: InfluxDB;
+
   subscribe(opts: ISubscribeOptions): number;
   unsubscribe(sId: number);
   publish(queue: string, message: string): Promise<void>;
