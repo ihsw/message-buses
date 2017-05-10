@@ -34,9 +34,7 @@ test("Producer app should response on queues queue", async (t) => {
         resolve();
       },
       timeoutInMs: 2 * 1000,
-      timeoutCallback: () => {
-        reject(new Error("Queues subscription timed out!"));
-      }
+      timeoutCallback: (sId) => reject(new Error(`Queues subscription with sId ${sId} timed out!`))
     });
   });
 });
