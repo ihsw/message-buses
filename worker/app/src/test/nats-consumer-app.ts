@@ -3,6 +3,7 @@ import * as process from "process";
 import { test } from "ava";
 import * as supertest from "supertest";
 import * as HttpStatus from "http-status";
+import * as express from "express";
 
 import { GetDriver } from "../message-drivers/NatsDriver";
 import { getUniqueName } from "../lib/helper";
@@ -10,17 +11,16 @@ import getApp from "../lib/consumer-app";
 import GetInflux from "../lib/influx";
 import { defaultAppName } from "../lib/test-helper";
 
-let messageDriver;
+let app: express.Application;
 test.before(async () => {
   const influx = await GetInflux(defaultAppName, process.env);
-  messageDriver = await GetDriver(influx, "nats-consumer-app-test", "ecp4", process.env);
+  const messageDriver = await GetDriver(influx, "nats-consumer-app-test", "ecp4", process.env);
+  app = getApp(messageDriver);
 });
 
 test("Timeout route should fail with 500", async (t) => {
-  const app = getApp(messageDriver);
-
   return new Promise<void>((resolve, reject) => {
-    supertest(app)
+    app
       .get("/timeout")
       .expect(HttpStatus.INTERNAL_SERVER_ERROR)
       .end((err: Error) => {
@@ -35,10 +35,8 @@ test("Timeout route should fail with 500", async (t) => {
 });
 
 test("Queue route should return with 200", async (t) => {
-  const app = getApp(messageDriver);
-
   return new Promise<void>((resolve, reject) => {
-    supertest(app)
+    app
       .get(`/test-name`)
       .end((err: Error, res: supertest.Response) => {
         if (err) {
@@ -52,10 +50,8 @@ test("Queue route should return with 200", async (t) => {
 });
 
 test("Queue route should fail on invalid queue name", async (t) => {
-  const app = getApp(messageDriver);
-
   return new Promise<void>((resolve, reject) => {
-    supertest(app)
+    app
       .get("/!@#$%^&*()")
       .expect(HttpStatus.INTERNAL_SERVER_ERROR)
       .end((err: Error) => {
@@ -70,10 +66,8 @@ test("Queue route should fail on invalid queue name", async (t) => {
 });
 
 test("Count queue route should take 500 messages and return with 200", async (t) => {
-  const app = getApp(messageDriver);
-
   return new Promise<void>((resolve, reject) => {
-    supertest(app)
+    app
       .get("/test-name/count/500")
       .expect(HttpStatus.OK)
       .end((err: Error) => {
@@ -88,11 +82,9 @@ test("Count queue route should take 500 messages and return with 200", async (t)
 });
 
 test("Bloat queue route should take a 50x bloated message and return with 200 (non-gzip response)", async (t) => {
-  const app = getApp(messageDriver);
-
   return new Promise<void>((resolve, reject) => {
     const length = 50;
-    supertest(app)
+    app
       .get(`/${getUniqueName("test-name")}/bloat/${length}`)
       .end((err: Error, res: supertest.Response) => {
         if (err) {
@@ -107,11 +99,9 @@ test("Bloat queue route should take a 50x bloated message and return with 200 (n
 });
 
 test("Bloat queue route should take a 50x bloated message and return with 200 (gzip response)", async (t) => {
-  const app = getApp(messageDriver);
-
   return new Promise<void>((resolve, reject) => {
     const length = 50;
-    supertest(app)
+    app
       .get(`/test-name/bloat/${length}`)
       .set("accept-encoding", "gzip")
       .end((err: Error, res: supertest.Response) => {
@@ -127,11 +117,9 @@ test("Bloat queue route should take a 50x bloated message and return with 200 (g
 });
 
 test("Rfm file queue route should return with proper content type and 200", async (t) => {
-  const app = getApp(messageDriver);
-
   return new Promise<void>((resolve, reject) => {
     const storeId = 2301;
-    supertest(app)
+    app
       .get(`/store/${storeId}`)
       .end((err: Error, res: supertest.Response) => {
         if (err) {
