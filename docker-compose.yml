@@ -59,8 +59,6 @@ services:
     - ./worker/app:/srv/app
   nats-consumer-benchmark:
     build: ./benchmark
-    environment:
-    - TARGET_HOST=nats-consumer
     volumes:
     - ./benchmark/app:/srv/app
   nats-top:
