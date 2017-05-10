@@ -40,13 +40,12 @@ test("Queue route should return with 200", async (t) => {
   return new Promise<void>((resolve, reject) => {
     supertest(app)
       .get(`/test-name`)
-      .expect(HttpStatus.OK)
-      .end((err: Error) => {
+      .end((err: Error, res: supertest.Response) => {
         if (err) {
           return reject(err);
         }
 
-        t.pass();
+        t.is(res.status, HttpStatus.OK, `Status was not OK: ${res.text}`);
         resolve();
       });
   });
