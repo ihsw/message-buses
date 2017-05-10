@@ -1,4 +1,6 @@
-import { InfluxDB } from "influx";
+import * as process from "process";
+
+import { InfluxDB, IPoint } from "influx";
 import * as NATS from "nats";
 import * as NSS from "node-nats-streaming";
 
@@ -78,7 +80,22 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
   }
 
   publish(queue: string, message: string | Buffer): Promise<void> {
-    return new Promise<void>((resolve) => this.natsClient.publish(queue, message, resolve));
+    return new Promise<void>((resolve) => {
+      const startTime = process.hrtime();
+      this.natsClient.publish(queue, message, () => {
+        const [endTimeInSeconds, endTimeInNanoseconds] = process.hrtime(startTime);
+        const endTimeInMs = ((endTimeInSeconds * 1000) + (endTimeInNanoseconds / 1000 / 1000)).toFixed(2);
+
+        this.influx.writePoints([
+          <IPoint>{
+            measurement: "publish_times",
+            fields: { duration: endTimeInMs }
+          }
+        ]);
+
+        resolve();
+      });
+    });
   }
 
   publishPersist(queue: string, message: string): Promise<string> {

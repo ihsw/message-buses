@@ -12,11 +12,11 @@ export default async (name: string, env: any): Promise<InfluxDB> => {
     database: name,
     schema: [
       <ISchemaOptions>{
-        measurement: "subscribe_times",
+        measurement: "publish_times",
         fields: {
           duration: FieldType.FLOAT
         },
-        tags: ["host"]
+        tags: []
       }
     ]
   });
