@@ -8,7 +8,7 @@ export interface ISubscribeOptions {
 }
 
 export interface ISubscribeCallback {
-  (msg: string, sId: number): void;
+  (msg: string): void;
 }
 
 export interface ISubscribePersistOptions extends ISubscribeOptions {
@@ -20,17 +20,21 @@ export interface ISubscribePersistCallback {
 }
 
 export interface ISubscribeTimeoutCallback {
-  (sId?: number): void;
+  (): void;
+}
+
+export interface IUnsubscribeCallback {
+  (): void;
 }
 
 export interface IMessageDriver {
   influx: InfluxDB;
 
-  subscribe(opts: ISubscribeOptions): number;
-  unsubscribe(sId: number);
+  subscribe(opts: ISubscribeOptions): IUnsubscribeCallback;
   publish(queue: string, message: string): Promise<void>;
 
-  subscribePersist(opts: ISubscribePersistOptions);
+  subscribePersist(opts: ISubscribePersistOptions): IUnsubscribeCallback;
+  subscribePersistFromBeginning(opts: ISubscribePersistOptions): IUnsubscribeCallback;
   publishPersist(queue: string, message: string): Promise<string>;
   lastPersistMessage(queue: string): Promise<string>;
 }

@@ -5,7 +5,12 @@ import * as NATS from "nats";
 import * as NSS from "node-nats-streaming";
 
 import AbstractMessageDriver from "./AbstractMessageDriver";
-import { IMessageDriver, ISubscribeOptions, ISubscribePersistOptions } from "./IMessageDriver";
+import {
+  IMessageDriver,
+  ISubscribeOptions,
+  ISubscribePersistOptions,
+  IUnsubscribeCallback
+} from "./IMessageDriver";
 
 export const GetDriver = async (influx: InfluxDB, name: string, clusterId: string, env: any): Promise<NatsDriver> => {
   return new Promise<NatsDriver>((resolve) => {
@@ -37,25 +42,24 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
     this.nssClient = nssClient;
   }
 
-  subscribe(opts: ISubscribeOptions) {
-    const sId = this.natsClient.subscribe(opts.queue, (msg) => opts.callback(msg, sId));
+  subscribe(opts: ISubscribeOptions): IUnsubscribeCallback {
+    const sId = this.natsClient.subscribe(opts.queue, (msg) => opts.callback(msg));
 
     if (opts.timeoutInMs) {
       const cb = opts.timeoutCallback ? opts.timeoutCallback : () => { return; };
       this.natsClient.timeout(sId, opts.timeoutInMs, 0, cb);
     }
 
-    return sId;
+    return () => this.natsClient.unsubscribe(sId);
   }
 
-  subscribePersist(opts: ISubscribePersistOptions) {
-    const subscribeOpts = this.nssClient.subscriptionOptions();
+  private subscribePersistWithOptions(opts: ISubscribeOptions, subscribeOpts: NSS.SubscriptionOptions): IUnsubscribeCallback {
     const subscription = this.nssClient.subscribe(opts.queue, `${opts.queue}.workers`, subscribeOpts);
 
     let tId;
     if (opts.timeoutInMs) {
       const cb = opts.timeoutCallback ? opts.timeoutCallback : () => { return; };
-      tId = setTimeout(() => cb, opts.timeoutInMs);
+      tId = setTimeout(cb, opts.timeoutInMs);
     }
 
     subscription.on("message", (msg: NSS.Message) => {
@@ -73,10 +77,21 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
 
       opts.callback(result);
     });
+
+    return () => subscription.unsubscribe();
   }
 
-  unsubscribe(sId: number) {
-    this.natsClient.unsubscribe(sId);
+  subscribePersist(opts: ISubscribePersistOptions): IUnsubscribeCallback {
+    return this.subscribePersistWithOptions(
+      opts,
+      this.nssClient.subscriptionOptions()
+    );
+  }
+
+  subscribePersistFromBeginning(opts: ISubscribePersistOptions): IUnsubscribeCallback {
+    const subscriptionOpts = this.nssClient.subscriptionOptions();
+    subscriptionOpts.setStartAtSequence(0);
+    return this.subscribePersistWithOptions(opts, subscriptionOpts);
   }
 
   publish(queue: string, message: string | Buffer): Promise<void> {

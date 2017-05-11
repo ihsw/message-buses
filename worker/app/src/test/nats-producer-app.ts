@@ -2,7 +2,7 @@ import * as process from "process";
 
 import { test } from "ava";
 
-import { ISubscribeOptions } from "../message-drivers/IMessageDriver";
+import { ISubscribePersistOptions } from "../message-drivers/IMessageDriver";
 import { GetDriver, NatsDriver } from "../message-drivers/NatsDriver";
 import GetInflux from "../lib/influx";
 import { getUniqueName } from "../lib/helper";
@@ -27,14 +27,19 @@ test("Producer app should response on queues queue", async (t) => {
 
   // waiting for a response
   return new Promise<void>((resolve, reject) => {
-    messageDriver.subscribe(<ISubscribeOptions>{
+    console.log(`Subscribing to ${queue} persistent queue`);
+    const unsubscribe = messageDriver.subscribePersist(<ISubscribePersistOptions>{
       queue: queue,
       callback: (msg) => {
         t.is(msg, "Pong");
+        unsubscribe();
         resolve();
       },
       timeoutInMs: 2 * 1000,
-      timeoutCallback: (sId) => reject(new Error(`Queues subscription with sId ${sId} timed out!`))
+      timeoutCallback: () => {
+        unsubscribe();
+        reject(new Error(`Queues subscription timed out!`));
+      }
     });
   });
 });

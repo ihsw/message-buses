@@ -4,7 +4,12 @@ import * as express from "express";
 import * as HttpStatus from "http-status";
 import { wrap } from "async-middleware";
 
-import { IMessageDriver, ISubscribeOptions } from "../message-drivers/IMessageDriver";
+import {
+  IMessageDriver,
+  ISubscribeOptions,
+  ISubscribePersistOptions,
+  IUnsubscribeCallback
+} from "../message-drivers/IMessageDriver";
 import { getUniqueName } from "../lib/helper";
 
 // global queue timeout
@@ -12,7 +17,7 @@ const queueTimeout = 10 * 1000;
 
 // subscribe response handler with timeouts
 interface ISubscribeHandlerCallback {
-  (tId: NodeJS.Timer, sId: number, msg: string);
+  (tId: NodeJS.Timer, unsubscribe: IUnsubscribeCallback, msg: string);
 }
 interface ISubscribeHandlerOptions {
   messageDriver: IMessageDriver,
@@ -30,13 +35,11 @@ const subscribeHandler = (opts: ISubscribeHandlerOptions) => {
     opts.res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Request timeout!");
   }, queueTimeout * 2);
 
-  opts.messageDriver.subscribe(<ISubscribeOptions>{
+  const unsubscribe = opts.messageDriver.subscribePersist(<ISubscribePersistOptions>{
     queue: opts.queue,
-    callback: (msg, sId) => opts.callback(tId, sId, msg),
+    callback: (msg) => opts.callback(tId, unsubscribe, msg),
     timeoutInMs: queueTimeout,
     timeoutCallback: () => {
-      console.log(`Queue timeout on ${opts.queue} timed out at ${opts.req.originalUrl}`);
-
       clearTimeout(tId);
 
       if (opts.res.headersSent) {
@@ -80,9 +83,9 @@ export default (messageDriver: IMessageDriver): express.Application => {
       queue: "invalid-queue",
       callback: () => res.status(HttpStatus.OK).send(),
       timeoutInMs: queueTimeout,
-      timeoutCallback: (sId) => {
+      timeoutCallback: () => {
         clearTimeout(tId);
-        res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(`Timed out with sid ${sId}!`);
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(`Timed out!`);
       }
     });
   });
@@ -108,9 +111,9 @@ export default (messageDriver: IMessageDriver): express.Application => {
       req: req,
       res: res,
       queue: queue,
-      callback: (tId, sId, msg) => {
+      callback: (tId, unsubscribe, msg) => {
         clearTimeout(tId);
-        messageDriver.unsubscribe(sId);
+        unsubscribe();
         res.send(msg);
       }
     });
@@ -139,11 +142,14 @@ export default (messageDriver: IMessageDriver): express.Application => {
       req: req,
       res: res,
       queue: queue,
-      callback: (tId, sId, msg) => {
+      callback: (tId: NodeJS.Timer, unsubscribe: IUnsubscribeCallback, msg: string) => {
+        messageCount += 1;
+        const isFinished = messageCount === count-1;
+
         res.write(`${msg}\n`);
 
-        if (++messageCount === count) {
-          messageDriver.unsubscribe(sId);
+        if (isFinished) {
+          unsubscribe();
           clearTimeout(tId);
           res.end();
         }
@@ -193,8 +199,8 @@ export default (messageDriver: IMessageDriver): express.Application => {
       req: req,
       res: res,
       queue: queue,
-      callback: (tId, sId, msg) => {
-      messageDriver.unsubscribe(sId);
+      callback: (tId, unsubscribe, msg) => {
+        unsubscribe();
         clearTimeout(tId);
 
         const msgBuf = Buffer.from(msg, "base64");
