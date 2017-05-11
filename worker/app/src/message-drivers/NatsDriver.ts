@@ -81,10 +81,9 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
 
   publish(queue: string, message: string | Buffer): Promise<void> {
     return new Promise<void>((resolve) => {
-      let startTime = process.hrtime();
+      const startTime = process.hrtime();
       this.natsClient.publish(queue, message, () => {
         const [endTimeInSeconds, endTimeInNanoseconds] = process.hrtime(startTime);
-        startTime = process.hrtime();
         const endTimeInMs = ((endTimeInSeconds * 1000) + (endTimeInNanoseconds / 1000 / 1000)).toFixed(2);
 
         this.influx.writePoints([
