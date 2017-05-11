@@ -51,6 +51,8 @@ services:
     - ./worker/app:/srv/app
   nats-consumer:
     build: ./worker
+    ports:
+    - "8080:80"
     depends_on:
     - nats-server
     - influxdb-server
