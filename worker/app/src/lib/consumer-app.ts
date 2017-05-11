@@ -52,6 +52,19 @@ export default (messageDriver: IMessageDriver): express.Application => {
   // setting up an express app
   const app = express();
 
+  app.use((_: express.Request, res: express.Response, next: Function) => {
+    const tId = setTimeout(() => {
+      if (res.headersSent) {
+        return res.end();
+      }
+
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Timeout!").end();
+    }, 20 * 1000);
+    res.on("end", () => clearTimeout(tId));
+
+    next();
+  });
+
   // setting up routes
   app.get("/timeout", (_, res) => {
     // setting up a full request timeout
