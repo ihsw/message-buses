@@ -59,7 +59,7 @@ export default (messageDriver: IMessageDriver): express.Application => {
       }
 
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Timeout!").end();
-    }, 20 * 1000);
+    }, 5 * 1000);
     res.on("end", () => clearTimeout(tId));
 
     next();
