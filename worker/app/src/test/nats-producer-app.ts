@@ -1,4 +1,5 @@
 import * as process from "process";
+import * as zlib from "zlib";
 
 import { test } from "ava";
 
@@ -42,7 +43,7 @@ test("Producer app should respond on queues queue", async (t) => {
   });
 });
 
-test("Producer app should respond on queuesWaiting queue", async (t) => {
+test("Producer app should respond on queueWaiting queue", async (t) => {
   // generating a unique response queue name
   const queue = getUniqueName("queues-waiting-test");
 
@@ -52,7 +53,9 @@ test("Producer app should respond on queuesWaiting queue", async (t) => {
     let messageCount = 0;
     const unsubscribe = messageDriver.subscribe(<ISubscribePersistOptions>{
       queue: queue,
-      callback: () => {
+      callback: (msg) => {
+        t.is(msg, `Pong #${messageCount}`);
+
         messageCount += 1;
         const isFinished = messageCount === count - 1;
 
@@ -72,6 +75,41 @@ test("Producer app should respond on queuesWaiting queue", async (t) => {
     messageDriver.publish("queueWaiting", JSON.stringify({
       queue: queue,
       count: count
+    }));
+  });
+});
+
+test("Producer app should respond on queueBloating queue", async (t) => {
+  // generating a unique response queue name
+  const queue = getUniqueName("queue-bloating-test");
+
+  return new Promise<void>((resolve, reject) => {
+    const length = 1;
+
+    const expectedResponse = "0".repeat(length * 1000);
+    const unsubscribe = messageDriver.subscribe(<ISubscribePersistOptions>{
+      queue: queue,
+      callback: (msg) => {
+        const msgBuf = Buffer.from(msg, "base64");
+        zlib.gunzip(msgBuf, (err, buf) => {
+          if (err) {
+            return reject(err);
+          }
+
+          t.is(buf.toString(), expectedResponse, "Bloated queue should respond with appropriate bloated message");
+          resolve();
+        });
+      },
+      timeoutInMs: 2 * 1000,
+      timeoutCallback: () => {
+        unsubscribe();
+        reject(new Error(`Queues subscription timed out!`));
+      }
+    });
+
+    messageDriver.publish("queueBloating", JSON.stringify({
+      queue: queue,
+      length: length
     }));
   });
 });
