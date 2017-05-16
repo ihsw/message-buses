@@ -48,7 +48,8 @@ services:
     - INFLUX_HOST=influxdb-server
     - INFLUX_PORT=8086
     entrypoint:
-    - ./bin/run-app
+    - ""
+    # - ./bin/run-app
     command:
     - nats-producer
     volumes:
