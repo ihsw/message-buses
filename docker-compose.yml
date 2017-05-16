@@ -47,6 +47,10 @@ services:
     - NATS_PORT=4222
     - INFLUX_HOST=influxdb-server
     - INFLUX_PORT=8086
+    entrypoint:
+    - ./bin/run-app
+    command:
+    - nats-producer
     volumes:
     - ./worker/app:/srv/app
   nats-consumer:
@@ -62,6 +66,10 @@ services:
     - INFLUX_HOST=influxdb-server
     - INFLUX_PORT=8086
     - APP_PORT=80
+    entrypoint:
+    - ./bin/run-app
+    command:
+    - nats-consumer
     volumes:
     - ./worker/app:/srv/app
   nats-consumer-benchmark:
