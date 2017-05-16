@@ -9,7 +9,7 @@ import GetInflux from "../lib/influx";
 import { GetDriver } from "../message-drivers/NatsDriver";
 import RfmManager from "../lib/rfm-manager";
 import getApp from "../lib/consumer-app";
-import { getUniqueName, gzip, gunzip } from "../lib/helper";
+import { getUniqueName, gzip } from "../lib/helper";
 
 let app: supertest.SuperTest<supertest.Test>;
 let rfmManager: RfmManager;
@@ -124,10 +124,10 @@ test("Rfm file queue route should return with proper content type and 200", asyn
 
   // gzipping a payload
   const greeting = "Hello, world!";
-  const payload = await gzip(Buffer.from(greeting));
+  const payload = (await gzip(Buffer.from(greeting))).toString("base64");
 
   // dumping it out to the rfm manager
-  await rfmManager.persist(storeId, payload.toString("base64"));
+  await rfmManager.persist(storeId, payload);
 
   return new Promise<void>((resolve, reject) => {
     app
@@ -138,13 +138,9 @@ test("Rfm file queue route should return with proper content type and 200", asyn
         }
 
         t.is(res.status, HttpStatus.OK, `Status was not OK: ${res.text}`);
-        t.is(res.header["content-type"], "application/zip, application/octet-stream", `Content type was not for zip files: ${res.header["content-type"]}`);
-        gunzip(Buffer.from(res.text))
-          .then((buf) => {
-            t.is(greeting, buf.toString());
-            resolve();
-          })
-          .catch(reject);
+        // t.is(res.header["content-type"], "application/zip, application/octet-stream", `Content type was not for zip files: ${res.header["content-type"]}`);
+        t.is(res.text, payload);
+        resolve();
       });
   });
 });

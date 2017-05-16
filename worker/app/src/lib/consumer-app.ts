@@ -175,9 +175,9 @@ export default (messageDriver: IMessageDriver): express.Application => {
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err.message);
     }
 
-    res.setHeader("content-type", "application/zip, application/octet-stream");
-    const msgBuf = Buffer.from(result, "base64");
-    res.send(msgBuf);
+    // res.setHeader("content-type", "application/zip, application/octet-stream");
+    // const msgBuf = Buffer.from(result, "base64");
+    res.send(result);
   }));
 
   app.get("/:queue/bloat/:length", (req, res) => {
