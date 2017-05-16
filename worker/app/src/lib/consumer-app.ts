@@ -35,7 +35,7 @@ const subscribeHandler = (opts: ISubscribeHandlerOptions) => {
     opts.res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Request timeout!");
   }, queueTimeout * 2);
 
-  const unsubscribe = opts.messageDriver.subscribePersist(<ISubscribePersistOptions>{
+  const unsubscribe = opts.messageDriver.subscribe(<ISubscribePersistOptions>{
     queue: opts.queue,
     callback: (msg) => opts.callback(tId, unsubscribe, msg),
     timeoutInMs: queueTimeout,
@@ -103,9 +103,7 @@ export default (messageDriver: IMessageDriver): express.Application => {
       return;
     }
 
-    // flagging a new queue to have a message published
-    messageDriver.publish("queues", queue);
-
+    // setting up a handler for messages
     subscribeHandler({
       messageDriver: messageDriver,
       req: req,
@@ -117,6 +115,9 @@ export default (messageDriver: IMessageDriver): express.Application => {
         res.send(msg);
       }
     });
+
+    // flagging a new queue to have a message published
+    messageDriver.publish("queues", queue);
   });
 
   app.get("/:queue/count/:count", (req, res) => {
@@ -133,9 +134,7 @@ export default (messageDriver: IMessageDriver): express.Application => {
     }
     const count = Number(req.params.count);
 
-    // flagging a new queue to have X messages published
-    messageDriver.publish("queueWaiting", JSON.stringify({ count: count, queue: queue }));
-
+    // setting up a handler for many messages
     let messageCount = 0;
     subscribeHandler({
       messageDriver: messageDriver,
@@ -155,6 +154,9 @@ export default (messageDriver: IMessageDriver): express.Application => {
         }
       }
     });
+
+    // flagging a new queue to have X messages published
+    messageDriver.publish("queueWaiting", JSON.stringify({ count: count, queue: queue }));
   });
 
   app.get("/store/:storeId", wrap(async (req: express.Request, res: express.Response) => {
@@ -191,9 +193,7 @@ export default (messageDriver: IMessageDriver): express.Application => {
     const length = Number(req.params.length);
     const acceptsGzip = req.header("accept-encoding") === "gzip";
 
-    // flagging a new queue to have messages of size X thousand zeroes
-    messageDriver.publish("queueBloating", JSON.stringify({ length: length, queue: queue }));
-
+    // setting up a handler for receiving bloated messages
     subscribeHandler({
       messageDriver: messageDriver,
       req: req,
@@ -225,6 +225,9 @@ export default (messageDriver: IMessageDriver): express.Application => {
         });
       }
     });
+
+    // flagging a new queue to have messages of size X thousand zeroes
+    messageDriver.publish("queueBloating", JSON.stringify({ length: length, queue: queue }));
   });
 
   return app;

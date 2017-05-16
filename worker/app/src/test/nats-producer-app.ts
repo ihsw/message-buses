@@ -22,13 +22,8 @@ test("Producer app should response on queues queue", async (t) => {
   // generating a unique response queue name
   const queue = getUniqueName("queues-test");
 
-  // publishing on the queues queue
-  await messageDriver.publish("queues", queue);
-
-  // waiting for a response
   return new Promise<void>((resolve, reject) => {
-    console.log(`Subscribing to ${queue} persistent queue`);
-    const unsubscribe = messageDriver.subscribePersist(<ISubscribePersistOptions>{
+    const unsubscribe = messageDriver.subscribe(<ISubscribePersistOptions>{
       queue: queue,
       callback: (msg) => {
         t.is(msg, "Pong");
@@ -41,5 +36,7 @@ test("Producer app should response on queues queue", async (t) => {
         reject(new Error(`Queues subscription timed out!`));
       }
     });
+
+    messageDriver.publish("queues", queue);
   });
 });
