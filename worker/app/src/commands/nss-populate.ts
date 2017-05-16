@@ -26,6 +26,6 @@ export default async (env: any, storeDir: string): Promise<void> => {
 
     const fileContents = await readFile(`${rfmDir}/${filename}`);
     const publishId = await messageDriver.publishPersist(`store-file/${storeId}`, fileContents.toString("base64"));
-    console.log(publishId);
+    console.log(`Store ${storeId} loaded with store, publish id: ${publishId}`);
   }
 };
