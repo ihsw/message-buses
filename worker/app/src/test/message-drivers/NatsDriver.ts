@@ -107,7 +107,7 @@ test("Driver should subscribe persist", async (t) => {
   });
 });
 
-test("Driver should timeout on subscribe against non-existent persist queue", async (t) => {
+test("Driver should timeout on non-existent persistent subscription", async (t) => {
   return new Promise<void>((resolve, reject) => {
     const queue = "non-existent-subscribe-persist-test";
 
