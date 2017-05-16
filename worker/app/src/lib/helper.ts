@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as zlib from "zlib";
 
 import * as uuid from "uuid";
 
@@ -38,4 +39,16 @@ export const getUniqueName = (name: string): string => {
   }
 
   return `${name}-${uuid.v4()}`;
+};
+
+export const gunzip = (buf: Buffer): Promise<Buffer> => {
+  return new Promise<Buffer>((resolve, reject) => {
+    zlib.gunzip(buf, (err, res) => {
+      if (err) {
+        return reject(err);
+      }
+
+      resolve(res);
+    });
+  });
 };
