@@ -13,7 +13,9 @@ const netConnect = (port: number, host: string): Promise<void> => {
 
 const main = async () => {
   // gathering command name
-  const commandName = String(process.env["COMMAND"]);
+  let commandName = typeof process.argv[2] !== "undefined"
+    ? process.argv[2]
+    : "";
   if (commandName.length === 0) {
     throw new Error("Command expected!");
   }

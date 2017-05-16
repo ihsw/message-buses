@@ -15,4 +15,5 @@ WORKDIR $APP_DIR
 RUN npm install -s \
   && npm run -s build
 
-CMD ["./bin/run-app"]
+ENTRYPOINT "./bin/run-app"
+CMD []
