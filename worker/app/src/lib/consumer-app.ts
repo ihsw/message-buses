@@ -10,6 +10,7 @@ import {
   ISubscribePersistOptions,
   IUnsubscribeCallback
 } from "../message-drivers/IMessageDriver";
+import RfmManager from "../lib/rfm-manager";
 import { getUniqueName } from "../lib/helper";
 
 // global queue timeout
@@ -52,8 +53,9 @@ const subscribeHandler = (opts: ISubscribeHandlerOptions) => {
 };
 
 export default (messageDriver: IMessageDriver): express.Application => {
-  // setting up an express app
+  // setting up an express app and rfm manager
   const app = express();
+  const rfmManager = new RfmManager(messageDriver);
 
   app.use((_: express.Request, res: express.Response, next: Function) => {
     const tId = setTimeout(() => {
@@ -168,7 +170,7 @@ export default (messageDriver: IMessageDriver): express.Application => {
     // fetching the store contents
     let result;
     try {
-      result = await messageDriver.lastPersistMessage(`store-file/${storeId}`);
+      result = await rfmManager.fetch(storeId);
     } catch (err) {
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err.message);
     }
