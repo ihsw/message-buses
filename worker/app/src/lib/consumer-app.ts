@@ -20,11 +20,11 @@ interface ISubscribeHandlerCallback {
   (tId: NodeJS.Timer, unsubscribe: IUnsubscribeCallback, msg: string);
 }
 interface ISubscribeHandlerOptions {
-  messageDriver: IMessageDriver,
-  req: express.Request,
-  res: express.Response,
-  queue: string,
-  callback: ISubscribeHandlerCallback
+  messageDriver: IMessageDriver;
+  req: express.Request;
+  res: express.Response;
+  queue: string;
+  callback: ISubscribeHandlerCallback;
 }
 const subscribeHandler = (opts: ISubscribeHandlerOptions) => {
   const tId = setTimeout(() => {
@@ -143,7 +143,7 @@ export default (messageDriver: IMessageDriver): express.Application => {
       queue: queue,
       callback: (tId: NodeJS.Timer, unsubscribe: IUnsubscribeCallback, msg: string) => {
         messageCount += 1;
-        const isFinished = messageCount === count-1;
+        const isFinished = messageCount === count - 1;
 
         res.write(`${msg}\n`);
 
