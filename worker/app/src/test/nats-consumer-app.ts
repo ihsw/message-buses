@@ -3,7 +3,6 @@ import * as process from "process";
 import { test } from "ava";
 import * as supertest from "supertest";
 import * as HttpStatus from "http-status";
-import * as express from "express";
 
 import { GetDriver } from "../message-drivers/NatsDriver";
 import { getUniqueName } from "../lib/helper";
@@ -11,11 +10,11 @@ import getApp from "../lib/consumer-app";
 import GetInflux from "../lib/influx";
 import { defaultAppName } from "../lib/test-helper";
 
-let app: express.Application;
+let app: supertest.SuperTest<supertest.Test>;
 test.before(async () => {
   const influx = await GetInflux(defaultAppName, process.env);
   const messageDriver = await GetDriver(influx, "nats-consumer-app-test", "ecp4", process.env);
-  app = getApp(messageDriver);
+  app = supertest(getApp(messageDriver));
 });
 
 test("Timeout route should fail with 500", async (t) => {
