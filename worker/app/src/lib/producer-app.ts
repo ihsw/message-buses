@@ -16,7 +16,8 @@ export default (messageDriver: IMessageDriver) => {
       const count = Number(req.count);
 
       for (let i = 0; i < count; i++) {
-        messageDriver.publish(queue, `Pong #${i}`);
+        messageDriver.publish(queue, `Pong #${i}`)
+          .catch((err) => { throw err; });
       }
     }
   });
@@ -34,7 +35,8 @@ export default (messageDriver: IMessageDriver) => {
           return;
         }
 
-        messageDriver.publish(queue, buf.toString("base64"));
+        messageDriver.publish(queue, buf.toString("base64"))
+          .catch((err) => { throw err; });
       });
     }
   });
