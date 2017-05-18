@@ -6,7 +6,10 @@ export default (messageDriver: IMessageDriver) => {
   // setting up queues
   messageDriver.subscribe({
     queue: "queues",
-    callback: (msg) => messageDriver.publish(msg, "Pong").catch((err: Error) => { throw err; })
+    callback: (msg) => {
+      messageDriver.publish(msg, "Pong")
+        .catch((err: Error) => { throw err; });
+    }
   });
   messageDriver.subscribe({
     queue: "queueWaiting",
@@ -17,10 +20,7 @@ export default (messageDriver: IMessageDriver) => {
 
       for (let i = 0; i < count; i++) {
         messageDriver.publish(queue, `Pong #${i}`)
-          .catch((err: Error) => {
-            console.log(`CAUGHT BULLSHIT: ${err.message}, THROWING`);
-            throw err;
-          });
+          .catch((err: Error) => { throw err; });
       }
     }
   });
