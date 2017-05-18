@@ -162,8 +162,6 @@ export default (messageDriver: IMessageDriver): express.Application => {
   });
 
   app.get("/store/:storeId", wrap(async (req: express.Request, res: express.Response) => {
-    res.setHeader("content-type", "text/plain");
-
     // parsing params and headers
     const storeId = req.params.storeId;
 
@@ -172,12 +170,15 @@ export default (messageDriver: IMessageDriver): express.Application => {
     try {
       result = await rfmManager.fetch(storeId);
     } catch (err) {
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err.message);
+      res.setHeader("content-type", "text/plain");
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR)
+      res.send(err.message);
+
+      return;
     }
 
-    // res.setHeader("content-type", "application/zip, application/octet-stream");
-    // const msgBuf = Buffer.from(result, "base64");
-    res.send(result);
+    res.setHeader("content-type", "application/zip, application/octet-stream");
+    res.send(Buffer.from(result, "base64"));
   }));
 
   app.get("/:queue/bloat/:length", (req, res) => {
