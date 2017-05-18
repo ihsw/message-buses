@@ -105,25 +105,22 @@ export default (messageDriver: IMessageDriver): express.Application => {
       return;
     }
 
+    // setting up a handler for messages
+    subscribeHandler({
+      messageDriver: messageDriver,
+      req: req,
+      res: res,
+      queue: queue,
+      callback: (tId, unsubscribe, msg) => {
+        clearTimeout(tId);
+        unsubscribe();
+        res.send(msg);
+      }
+    });
+
     // flagging a new queue to have a message published
     messageDriver.publish("queues", queue)
-      .then(() => {
-        subscribeHandler({
-          messageDriver: messageDriver,
-          req: req,
-          res: res,
-          queue: queue,
-          callback: (tId, unsubscribe, msg) => {
-            clearTimeout(tId);
-            unsubscribe();
-            res.send(msg);
-          }
-        });
-      })
-      .catch((err: Error) => {
-        res.status(HttpStatus.INTERNAL_SERVER_ERROR);
-        res.send(err.message);
-      });
+      .catch((err: Error) => { throw err; });
   });
 
   app.get("/:queue/count/:count", (req, res) => {
@@ -140,33 +137,30 @@ export default (messageDriver: IMessageDriver): express.Application => {
     }
     const count = Number(req.params.count);
 
+    // setting up a handler for many messages
+    let messageCount = 0;
+    subscribeHandler({
+      messageDriver: messageDriver,
+      req: req,
+      res: res,
+      queue: queue,
+      callback: (tId: NodeJS.Timer, unsubscribe: IUnsubscribeCallback, msg: string) => {
+        messageCount += 1;
+        const isFinished = messageCount === count;
+
+        res.write(`${msg}\n`);
+
+        if (isFinished) {
+          unsubscribe();
+          clearTimeout(tId);
+          res.end();
+        }
+      }
+    });
+
     // flagging a new queue to have X messages published
     messageDriver.publish("queueWaiting", JSON.stringify({ count: count, queue: queue }))
-      .then(() => {
-        let messageCount = 0;
-        subscribeHandler({
-          messageDriver: messageDriver,
-          req: req,
-          res: res,
-          queue: queue,
-          callback: (tId: NodeJS.Timer, unsubscribe: IUnsubscribeCallback, msg: string) => {
-            messageCount += 1;
-            const isFinished = messageCount === count;
-
-            res.write(`${msg}\n`);
-
-            if (isFinished) {
-              unsubscribe();
-              clearTimeout(tId);
-              res.end();
-            }
-          }
-        });
-      })
-      .catch((err: Error) => {
-        res.status(HttpStatus.INTERNAL_SERVER_ERROR);
-        res.send(err.message);
-      });
+      .catch((err: Error) => { throw err; });
   });
 
   app.get("/store/:storeId", wrap(async (req: express.Request, res: express.Response) => {
@@ -204,45 +198,42 @@ export default (messageDriver: IMessageDriver): express.Application => {
     const length = Number(req.params.length);
     const acceptsGzip = req.header("accept-encoding") === "gzip";
 
+    // setting up a handler for receiving bloated messages
+    subscribeHandler({
+      messageDriver: messageDriver,
+      req: req,
+      res: res,
+      queue: queue,
+      callback: (tId, unsubscribe, msg) => {
+        unsubscribe();
+        clearTimeout(tId);
+
+        const msgBuf = Buffer.from(msg, "base64");
+
+        // optionally sending the gzipped message
+        if (acceptsGzip) {
+          res.setHeader("content-encoding", "gzip");
+          res.send(msgBuf);
+
+          return;
+        }
+
+        // gunzipping the message
+        zlib.gunzip(msgBuf, (err, buf) => {
+          if (err) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err.message);
+
+            return;
+          }
+
+          res.send(buf);
+        });
+      }
+    });
+
     // flagging a new queue to have messages of size X thousand zeroes
     messageDriver.publish("queueBloating", JSON.stringify({ length: length, queue: queue }))
-      .then(() => {
-        subscribeHandler({
-          messageDriver: messageDriver,
-          req: req,
-          res: res,
-          queue: queue,
-          callback: (tId, unsubscribe, msg) => {
-            unsubscribe();
-            clearTimeout(tId);
-
-            const msgBuf = Buffer.from(msg, "base64");
-
-            // optionally sending the gzipped message
-            if (acceptsGzip) {
-              res.setHeader("content-encoding", "gzip");
-              res.send(msgBuf);
-
-              return;
-            }
-
-            // gunzipping the message
-            zlib.gunzip(msgBuf, (err, buf) => {
-              if (err) {
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err.message);
-
-                return;
-              }
-
-              res.send(buf);
-            });
-          }
-        });
-      })
-      .catch((err: Error) => {
-        res.status(HttpStatus.INTERNAL_SERVER_ERROR);
-        res.send(err.message);
-      });
+      .catch((err: Error) => { throw err; });
   });
 
   return app;
