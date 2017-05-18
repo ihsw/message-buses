@@ -1,7 +1,6 @@
 http://$TARGET_HOST/regular
 http://$TARGET_HOST/many/count/10
 http://$TARGET_HOST/many/count/100
-http://$TARGET_HOST/many/count/1000
 http://$TARGET_HOST/bloated/bloat/10
 http://$TARGET_HOST/bloated/bloat/100
 http://$TARGET_HOST/bloated/bloat/1000

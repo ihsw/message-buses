@@ -2,4 +2,4 @@
 set -e
 
 ./bin/generate-urls-file \
-  && siege -f ./urls.txt -i -c 5 -b -t 10s
+  && siege -f ./urls.txt -i -c 5 -b -t 10m
