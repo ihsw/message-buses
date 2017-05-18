@@ -11,6 +11,7 @@ import {
   ISubscribePersistOptions,
   IUnsubscribeCallback
 } from "./IMessageDriver";
+import { BullshitErrorClass } from "../lib/influx";
 
 export const GetDriver = async (influx: InfluxDB, name: string, clusterId: string, env: any): Promise<NatsDriver> => {
   return new Promise<NatsDriver>((resolve) => {
@@ -109,7 +110,13 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
         ];
         this.influx.writePoints(points)
           .then(resolve)
-          .catch(reject);
+          .catch((err: Error) => {
+            if (err.constructor.name === BullshitErrorClass) {
+              return;
+            }
+
+            reject(err);
+          });
       });
     });
   }

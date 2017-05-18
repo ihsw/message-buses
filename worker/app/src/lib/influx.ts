@@ -1,5 +1,7 @@
 import { InfluxDB, ISingleHostConfig, FieldType, ISchemaOptions } from "influx";
 
+export const BullshitErrorClass = "ServiceNotAvailableError";
+
 export default async (name: string, env: any): Promise<InfluxDB> => {
   // parsing env vars
   const influxHost = env["INFLUX_HOST"];
