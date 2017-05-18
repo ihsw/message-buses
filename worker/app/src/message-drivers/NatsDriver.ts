@@ -11,7 +11,7 @@ import {
   ISubscribePersistOptions,
   IUnsubscribeCallback
 } from "./IMessageDriver";
-import { BullshitErrorClass } from "../lib/influx";
+import { BullshitErrorClass, Measurements } from "../lib/influx";
 
 export const GetDriver = async (influx: InfluxDB, name: string, clusterId: string, env: any): Promise<NatsDriver> => {
   return new Promise<NatsDriver>((resolve) => {
@@ -104,7 +104,7 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
 
         const points = [
           <IPoint>{
-            measurement: "publish_times",
+            measurement: Measurements.PUBLISH_TIMES,
             fields: { duration: endTimeInMs }
           }
         ];

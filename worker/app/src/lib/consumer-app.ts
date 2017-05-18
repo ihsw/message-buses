@@ -3,6 +3,7 @@ import * as zlib from "zlib";
 import * as express from "express";
 import * as HttpStatus from "http-status";
 import { wrap } from "async-middleware";
+import { InfluxDB, IPoint } from "influx";
 
 import {
   IMessageDriver,
@@ -12,6 +13,7 @@ import {
 } from "../message-drivers/IMessageDriver";
 import RfmManager from "../lib/rfm-manager";
 import { getUniqueName } from "../lib/helper";
+import { BullshitErrorClass, Measurements } from "./influx";
 
 // global queue timeout
 const queueTimeout = 10 * 1000;
@@ -52,12 +54,14 @@ const subscribeHandler = (opts: ISubscribeHandlerOptions) => {
   });
 };
 
-export default (messageDriver: IMessageDriver): express.Application => {
+export default (messageDriver: IMessageDriver, influx:InfluxDB): express.Application => {
   // setting up an express app and rfm manager
   const app = express();
   const rfmManager = new RfmManager(messageDriver);
 
+  // middleware for timeouts and stats collecting
   app.use((_: express.Request, res: express.Response, next: Function) => {
+    // middleware timeout
     const tId = setTimeout(() => {
       if (res.headersSent) {
         return res.end();
@@ -65,7 +69,31 @@ export default (messageDriver: IMessageDriver): express.Application => {
 
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Timeout!").end();
     }, 5 * 1000);
-    res.on("end", () => clearTimeout(tId));
+
+    // response end
+    const startTime = process.hrtime();
+    res.on("end", () => {
+      // clearing the full request timeout
+      clearTimeout(tId);
+
+      // measuring the response time for this request
+      const [endTimeInSeconds, endTimeInNanoseconds] = process.hrtime(startTime);
+      const endTimeInMs = ((endTimeInSeconds * 1000) + (endTimeInNanoseconds / 1000 / 1000)).toFixed(2);
+      const points = [
+        <IPoint>{
+          measurement: Measurements.PAGE_RESPONSE_TIMES,
+          fields: { duration: endTimeInMs }
+        }
+      ];
+      influx.writePoints(points)
+        .catch((err: Error) => {
+          if (err.constructor.name === BullshitErrorClass) {
+            return;
+          }
+
+          throw err;
+        });
+    });
 
     next();
   });

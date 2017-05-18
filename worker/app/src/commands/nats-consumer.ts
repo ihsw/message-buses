@@ -18,7 +18,7 @@ export default async (env: any): Promise<void> => {
   const messageDriver = await GetDriver(influx, "nats-consumer", "ecp4", env);
 
   // generating an app
-  const app = getApp(messageDriver);
+  const app = getApp(messageDriver, influx);
 
   // listening on app port
   app.listen(appPort);

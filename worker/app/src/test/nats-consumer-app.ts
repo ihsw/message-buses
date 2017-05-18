@@ -16,7 +16,7 @@ let rfmManager: RfmManager;
 test.before(async () => {
   const influx = await GetInflux(defaultAppName, process.env);
   const messageDriver = await GetDriver(influx, "nats-consumer-app-test", "ecp4", process.env);
-  app = supertest(getApp(messageDriver));
+  app = supertest(getApp(messageDriver, influx));
   rfmManager = new RfmManager(messageDriver);
 });
 

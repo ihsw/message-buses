@@ -2,6 +2,11 @@ import { InfluxDB, ISingleHostConfig, FieldType, ISchemaOptions } from "influx";
 
 export const BullshitErrorClass = "ServiceNotAvailableError";
 
+export class Measurements {
+  static readonly PUBLISH_TIMES = "publish_times";
+  static readonly PAGE_RESPONSE_TIMES = "page_response_times";
+}
+
 export default async (name: string, env: any): Promise<InfluxDB> => {
   // parsing env vars
   const influxHost = env["INFLUX_HOST"];
@@ -14,7 +19,14 @@ export default async (name: string, env: any): Promise<InfluxDB> => {
     database: name,
     schema: [
       <ISchemaOptions>{
-        measurement: "publish_times",
+        measurement: Measurements.PUBLISH_TIMES,
+        fields: {
+          duration: FieldType.FLOAT
+        },
+        tags: []
+      },
+      <ISchemaOptions>{
+        measurement: Measurements.PAGE_RESPONSE_TIMES,
         fields: {
           duration: FieldType.FLOAT
         },
