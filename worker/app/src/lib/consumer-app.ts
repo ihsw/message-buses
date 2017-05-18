@@ -119,7 +119,11 @@ export default (messageDriver: IMessageDriver): express.Application => {
     });
 
     // flagging a new queue to have a message published
-    messageDriver.publish("queues", queue);
+    messageDriver.publish("queues", queue)
+      .catch((err: Error) => {
+        console.log(`CAUGHT BULLSHIT: ${err.message}`);
+        throw err;
+      });
   });
 
   app.get("/:queue/count/:count", (req, res) => {
@@ -158,7 +162,8 @@ export default (messageDriver: IMessageDriver): express.Application => {
     });
 
     // flagging a new queue to have X messages published
-    messageDriver.publish("queueWaiting", JSON.stringify({ count: count, queue: queue }));
+    messageDriver.publish("queueWaiting", JSON.stringify({ count: count, queue: queue }))
+      .catch((err: Error) => { throw err; });
   });
 
   app.get("/store/:storeId", wrap(async (req: express.Request, res: express.Response) => {
@@ -230,7 +235,8 @@ export default (messageDriver: IMessageDriver): express.Application => {
     });
 
     // flagging a new queue to have messages of size X thousand zeroes
-    messageDriver.publish("queueBloating", JSON.stringify({ length: length, queue: queue }));
+    messageDriver.publish("queueBloating", JSON.stringify({ length: length, queue: queue }))
+      .catch((err: Error) => { throw err; });
   });
 
   return app;

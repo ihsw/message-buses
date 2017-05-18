@@ -109,7 +109,10 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
         ];
         this.influx.writePoints(points)
           .then(resolve)
-          .catch(reject);
+          .catch((err) => {
+            console.log(`CAUGHT FAIL FROM INFLUX.WRITEPOINTS: ${err.message}`);
+            reject(err);
+          });
       });
     });
   }
