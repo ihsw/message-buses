@@ -3,6 +3,8 @@ version: '3'
 services:
   influxdb-server:
     build: ./influxdb-server
+    ports:
+    - "8086:8086"
   influxdb-frontend:
     build: ./influxdb-frontend
     ports:
@@ -37,6 +39,8 @@ services:
 
   nats-server:
     build: ./nats-server
+    ports:
+    - "4442:4442"
   nats-producer:
     build: ./worker
     depends_on:
