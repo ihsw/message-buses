@@ -145,7 +145,7 @@ export default (messageDriver: IMessageDriver): express.Application => {
       queue: queue,
       callback: (tId: NodeJS.Timer, unsubscribe: IUnsubscribeCallback, msg: string) => {
         messageCount += 1;
-        const isFinished = messageCount === count - 1;
+        const isFinished = messageCount === count;
 
         res.write(`${msg}\n`);
 
