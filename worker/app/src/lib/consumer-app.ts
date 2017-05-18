@@ -72,7 +72,7 @@ export default (messageDriver: IMessageDriver, influx:InfluxDB): express.Applica
 
     // response end
     const startTime = process.hrtime();
-    res.on("end", () => {
+    res.on("finish", () => {
       // clearing the full request timeout
       clearTimeout(tId);
 
