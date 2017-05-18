@@ -57,10 +57,9 @@ test("Producer app should respond on queueWaiting queue", async (t) => {
         t.is(msg, `Pong #${messageCount}`);
 
         messageCount += 1;
-        const isFinished = messageCount === count - 1;
+        const isFinished = messageCount === count;
 
         if (isFinished) {
-          t.pass();
           unsubscribe();
           resolve();
         }
