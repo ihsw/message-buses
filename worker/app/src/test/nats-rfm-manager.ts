@@ -8,7 +8,7 @@ import RfmManager from "../lib/rfm-manager";
 let rfmManager: RfmManager;
 test.before(async () => {
   const influx = await GetInflux(defaultAppName, process.env);
-  const messageDriver = await GetDriver(influx, "nats-consumer-app-test", "ecp4", process.env);
+  const messageDriver = await GetDriver(influx, "nats-rfm-manager-test", "ecp4", process.env);
   rfmManager = new RfmManager(messageDriver);
 });
 
