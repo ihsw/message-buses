@@ -17,7 +17,7 @@ services:
     - influxdb-server
     environment:
     - INFLUXDB_HOST=influxdb-server
-    - TELEGRAF_AGENT_HOSTNAME=telegraf-collector
+    - GROUP_NAME=telegraf-collector
     volumes:
     - ./telegraf-collector/app:/srv/app
 
