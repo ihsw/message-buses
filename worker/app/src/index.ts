@@ -60,3 +60,6 @@ if (process.argv.slice(2).length === 0) {
   program.outputHelp();
   process.exit(1);
 }
+
+// adding unhandled promise handler, for extreme levels of bullshit
+process.on("unhandledRejection", (err) => console.error(err.message));
