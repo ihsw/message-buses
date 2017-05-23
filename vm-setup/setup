@@ -17,7 +17,7 @@ fi
 
 # fetching the ip for this host and the influx host
 GCLOUD_EXTERNAL_IP=$(gcloud compute instances list | grep $GCLOUD_HOST | awk '{print $5}')
-INFLUX_HOST=$(gcloud compute instances list | grep influxdb-server | awk '{print $5}')
+INFLUX_HOST=$(gcloud compute instances list | grep influxdb-server | awk '{print $4}')
 
 if [ -z $GCLOUD_EXTERNAL_IP ]; then
 	echo "Host $GCLOUD_HOST could not be found in google cloud compute!"
