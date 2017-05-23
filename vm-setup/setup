@@ -30,7 +30,7 @@ SCP_ARGS="-i $SCP_IDENT"
 GCLOUD_AUTH="$DEFAULT_USER@$GCLOUD_HOST"
 
 # installing docker
-scp $SCP_ARGS ./install-docker $SCP_AUTH:~
+scp $SCP_ARGS ./vm-setup/install-docker $SCP_AUTH:~
 gcloud compute ssh $GCLOUD_AUTH -- "sudo ~/install-docker"
 
 # cloning the repo and starting up a telegraf collector
@@ -40,4 +40,3 @@ gcloud compute ssh $GCLOUD_AUTH -- "ssh-keyscan -t rsa github.com >> ~/.ssh/know
 gcloud compute ssh $GCLOUD_AUTH -- "git clone git@github.com:ihsw/message-buses.git"
 gcloud compute ssh $GCLOUD_AUTH -- "docker build -t ihsw/telegraf-collector ./message-buses/telegraf-collector"
 gcloud compute ssh $GCLOUD_AUTH -- "docker run -it -d -e INFLUXDB_HOST=$INFLUX_HOST -e GROUP_NAME=$GCLOUD_HOST ihsw/telegraf-collector"
-
