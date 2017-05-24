@@ -6,7 +6,7 @@ DEFAULT_USER="gcloud-from-work"
 GCLOUD_INSTANCE=$@
 
 # validation
-if [ -z $GCLOUD_INSTANCE]; then
+if [ -z $GCLOUD_INSTANCE ]; then
     echo "GCLOUD_INSTANCE must be provided!"
     exit 1
 fi
