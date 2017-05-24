@@ -1,5 +1,7 @@
 FROM telegraf
 
+EXPOSE 8186
+
 # env vars
 ENV INFLUXDB_HOST 0.0.0.0
 ENV GROUP_NAME telegraf-collector-standalone

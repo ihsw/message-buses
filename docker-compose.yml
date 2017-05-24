@@ -13,6 +13,8 @@ services:
     - influxdb-server
   telegraf-collector:
     build: ./telegraf-collector
+    ports:
+    - "8186:8186"
     depends_on:
     - influxdb-server
     environment:
@@ -45,12 +47,12 @@ services:
     build: ./worker
     depends_on:
     - nats-server
-    - influxdb-server
+    - telegraf-collector
     environment:
     - NATS_HOST=nats-server
     - NATS_PORT=4222
-    - INFLUX_HOST=influxdb-server
-    - INFLUX_PORT=8086
+    - INFLUX_HOST=telegraf-collector
+    - INFLUX_PORT=8186
     entrypoint:
     - ""
     # - ./bin/run-app
@@ -64,12 +66,12 @@ services:
     - "8080:80"
     depends_on:
     - nats-server
-    - influxdb-server
+    - telegraf-collector
     environment:
     - NATS_HOST=nats-server
     - NATS_PORT=4222
-    - INFLUX_HOST=influxdb-server
-    - INFLUX_PORT=8086
+    - INFLUX_HOST=telegraf-collector
+    - INFLUX_PORT=8186
     - APP_PORT=80
     entrypoint:
     - ""
@@ -87,3 +89,10 @@ services:
     depends_on:
     - nats-server
     command: ["-s", "nats-server"]
+
+  # reads influxdb writes out of a nats queue
+  influxdb-buffer:
+    build: ./influxdb-buffer
+    depends_on:
+    - influxdb-server
+    - nats-server
