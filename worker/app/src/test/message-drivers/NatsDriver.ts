@@ -80,16 +80,20 @@ test("Driver should support queue grouping", async (t) => {
 
     // setting up multiple subscribe handlers
     for (let i = 0; i < handlerCount; i++) {
-      messageDriver.subscribe(<ISubscribeOptions>{
-        queue: queue,
-        parallel: true,
-        callback: (receivedMsg) => {
-          t.is(receivedMsg, msg, "Message from subscription matches published message");
-          receivedCount += 1;
-        },
-        timeoutInMs: 2 * 1000,
-        timeoutCallback: (sId) => reject(new Error(`Subscription ${sId} timed out!`))
-      });
+      (() => {
+        const unsubscribe = messageDriver.subscribe(<ISubscribeOptions>{
+          queue: queue,
+          parallel: true,
+          callback: (receivedMsg) => {
+            t.is(receivedMsg, msg, "Message from subscription matches published message");
+            receivedCount += 1;
+
+            unsubscribe();
+          },
+          timeoutInMs: 2 * 1000,
+          timeoutCallback: (sId) => reject(new Error(`Subscription ${sId} timed out!`))
+        });
+      })();
     }
 
     // publishing out a series of messages with the expectation that different handlers receive it
