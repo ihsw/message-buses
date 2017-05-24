@@ -14,5 +14,5 @@ export default async (env: any): Promise<void> => {
   const messageDriver = await GetDriver(influx, "nats-producer", "ecp4", env);
 
   // running out the app
-  run(messageDriver);
+  run(messageDriver, true);
 };

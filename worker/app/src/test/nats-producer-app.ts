@@ -17,7 +17,7 @@ test.before(async () => {
   messageDriver = await GetDriver(influx, "nats-producer-app-test", "ecp4", process.env);
 
   // starting up the queues
-  run(messageDriver);
+  run(messageDriver, false);
 });
 
 test("Producer app should respond on queues queue", async (t) => {

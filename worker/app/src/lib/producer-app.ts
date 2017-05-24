@@ -2,10 +2,11 @@ import * as zlib from "zlib";
 
 import { IMessageDriver } from "../message-drivers/IMessageDriver";
 
-export default (messageDriver: IMessageDriver) => {
+export default (messageDriver: IMessageDriver, parallel: boolean) => {
   // setting up queues
   messageDriver.subscribe({
     queue: "queues",
+    parallel: parallel,
     callback: (msg) => {
       messageDriver.publish(msg, "Pong")
         .catch((err: Error) => { throw err; });
@@ -13,6 +14,7 @@ export default (messageDriver: IMessageDriver) => {
   });
   messageDriver.subscribe({
     queue: "queueWaiting",
+    parallel: parallel,
     callback: (msg) => {
       const req = JSON.parse(msg);
       const queue = req.queue;
@@ -26,6 +28,7 @@ export default (messageDriver: IMessageDriver) => {
   });
   messageDriver.subscribe({
     queue: "queueBloating",
+    parallel: parallel,
     callback: (msg) => {
       const req = JSON.parse(msg);
       const queue = req.queue;
