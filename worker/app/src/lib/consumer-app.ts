@@ -40,7 +40,13 @@ const subscribeHandler = (opts: ISubscribeHandlerOptions) => {
 
   const unsubscribe = opts.messageDriver.subscribe(<ISubscribePersistOptions>{
     queue: opts.queue,
-    callback: (msg) => opts.callback(tId, unsubscribe, msg),
+    callback: (msg) => {
+      if (opts.res.headersSent) {
+        return;
+      }
+
+      opts.callback(tId, unsubscribe, msg);
+    },
     timeoutInMs: queueTimeout,
     timeoutCallback: () => {
       clearTimeout(tId);
