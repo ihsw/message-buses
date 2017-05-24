@@ -44,7 +44,12 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
   }
 
   subscribe(opts: ISubscribeOptions): IUnsubscribeCallback {
-    const sId = this.natsClient.subscribe(opts.queue, (msg) => opts.callback(msg));
+    let sId;
+    if (!opts.parallel) {
+      sId = this.natsClient.subscribe(opts.queue, (msg) => opts.callback(msg));
+    } else {
+      sId = this.natsClient.subscribe(opts.queue, <NATS.SubscribeOptions>{ queue: `${opts.queue}.workers` }, (msg) => opts.callback(msg));
+    }
 
     if (opts.timeoutInMs) {
       const cb = opts.timeoutCallback ? opts.timeoutCallback : () => { return; };

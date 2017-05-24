@@ -5,6 +5,7 @@ export interface ISubscribeOptions {
   callback: ISubscribeCallback;
   timeoutInMs?: number;
   timeoutCallback?: ISubscribeTimeoutCallback;
+  parallel?: boolean;
 }
 
 export interface ISubscribeCallback {

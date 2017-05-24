@@ -46,6 +46,59 @@ test("Driver should subscribe", async (t) => {
   });
 });
 
+test("Driver should support queue grouping", async (t) => {
+  return new Promise<void>((resolve, reject) => {
+    const queue = "subscribe-group-test";
+    const msg = "Hello, world!";
+
+    // misc
+    const handlerCount = 3;
+    
+    // setting up a timeout for when the subscribers do not receive enough messages
+    let receivedCount = 0;
+    setTimeout(() => {
+      if (receivedCount === 0) {
+        reject(new Error("Did not receive any messages!"));
+
+        return;
+      } else if (receivedCount > handlerCount) {
+        if (receivedCount === (handlerCount * handlerCount)) {
+          reject(new Error(`Received square of expected message count (${receivedCount}), did you forget to set up parallel subscribers?`));
+        } else {
+          reject(new Error(`Received too many messages: ${receivedCount}`));
+        }
+
+        return;
+      } else if (receivedCount === handlerCount) {
+        resolve();
+
+        return;
+      }
+
+      reject(new Error("Did not receive enough messages!"));
+    }, 5 * 1000);
+
+    // setting up multiple subscribe handlers
+    for (let i = 0; i < handlerCount; i++) {
+      messageDriver.subscribe(<ISubscribeOptions>{
+        queue: queue,
+        parallel: true,
+        callback: (receivedMsg) => {
+          t.is(receivedMsg, msg, "Message from subscription matches published message");
+          receivedCount += 1;
+        },
+        timeoutInMs: 2 * 1000,
+        timeoutCallback: (sId) => reject(new Error(`Subscription ${sId} timed out!`))
+      });
+    }
+
+    // publishing out a series of messages with the expectation that different handlers receive it
+    for (let i = 0; i < handlerCount; i++) {
+      messageDriver.publish(queue, msg).catch(reject);
+    }
+  });
+});
+
 test("Driver should timeout on non-existent subscription", async (t) => {
   return new Promise<void>((resolve, reject) => {
     const queue = "non-existent-subscribe-test";
