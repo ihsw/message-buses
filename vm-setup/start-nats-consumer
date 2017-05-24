@@ -1,0 +1,10 @@
+#! /bin/bash
+
+# misc
+SCP_IDENT="~/.ssh/google_compute_engine"
+DEFAULT_USER="gcloud-from-work"
+GCLOUD_AUTH="$DEFAULT_USER@nats-consumer"
+
+# building the image
+gcloud compute ssh $GCLOUD_AUTH -- 'cd ./message-buses && docker build -t ihsw/nats-consumer ./worker'
+gcloud compute ssh $GCLOUD_AUTH -- 'docker run -it -e NATS_HOST=10.0.0.2 -e INFLUX_HOST=10.0.0.7 -e APP_PORT=80 --entrypoint="" -p 80:80 ihsw/nats-consumer ./bin/run-app nats-consumer'
