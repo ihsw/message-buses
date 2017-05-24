@@ -1,4 +1,4 @@
-FROM telegraf
+FROM telegraf:1.2
 
 EXPOSE 8186
 
