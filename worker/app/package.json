@@ -4,10 +4,10 @@
   "description": "",
   "main": "./dist/index.js",
   "scripts": {
-    "test": "ava --verbose --concurrency 1 ./dist/test/*.js ./dist/test/**/*.js",
+    "test": "ava --verbose ./dist/test/*.js ./dist/test/**/*.js",
     "lint": "tslint ./src/**/*.ts && echo linted",
     "build": "tsc && echo built",
-    "ava": "ava --verbose --concurrency 1"
+    "ava": "ava --verbose"
   },
   "author": "",
   "license": "ISC",
