@@ -1,5 +1,9 @@
 FROM node
 
+# for editing remotely
+RUN apt-get update -y \
+  && apt-get install -yq vim
+
 # env vars
 ENV NATS_HOST 0.0.0.0
 ENV NATS_PORT 4222
