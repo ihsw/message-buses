@@ -11,5 +11,5 @@ ECP4_INSTANCES=$(gcloud compute instances list --filter=ecp4 | tail -n +2 | awk 
 for instance in $ECP4_INSTANCES
 do
     echo "containers on $instance"
-	gcloud compute ssh $DEFAULT_USER@instance -- 'docker ps'
+	gcloud compute ssh $DEFAULT_USER@$instance -- 'docker ps'
 done
