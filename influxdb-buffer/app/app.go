@@ -29,7 +29,7 @@ func main() {
 	// starting it up
 	fmt.Println("Starting!")
 	msgLimit := 50
-	msgBatchChan := make(chan []*nats.Msg)
+	msgBatchChan := make(chan []*nats.Msg, 1)
 	msgs := []*nats.Msg{}
 	c := time.Tick(1 * time.Second)
 	for {
