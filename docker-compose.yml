@@ -96,3 +96,5 @@ services:
     depends_on:
     - influxdb-server
     - nats-server
+    volumes:
+    - ./influxdb-buffer:/go/src/influxdb-buffer
