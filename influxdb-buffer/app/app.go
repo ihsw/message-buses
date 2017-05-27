@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"time"
 
 	"encoding/json"
@@ -17,6 +18,8 @@ type pointMessage struct {
 }
 
 func main() {
+	rand.Seed(42)
+
 	// connecting to nats
 	nc, err := nats.Connect("nats://nats-server:4222")
 	if err != nil {
@@ -62,17 +65,15 @@ func main() {
 
 	// starting it up
 	fmt.Println("Starting!")
-	msgLimit := 50
+	msgLimit := 5000
 	msgBatchChan := make(chan []*nats.Msg, 4)
 	msgs := []*nats.Msg{}
 	errs := make(chan error, 64)
 	msgBatchCountdown := time.Tick(1 * time.Second)
-	fakePublishCountdown := time.Tick(5 * time.Second)
+	fakePublishCountdown := time.Tick(50 * time.Millisecond)
 	for {
 		select {
 		case msg := <-writeChan:
-			fmt.Printf("Received message: %s\n", string(msg.Data))
-
 			msgs = append(msgs, msg)
 
 			if len(msgs) > msgLimit {
@@ -88,10 +89,7 @@ func main() {
 				continue
 			}
 
-			bp, err := influxdb.NewBatchPoints(influxdb.BatchPointsConfig{
-				Database:  "ecp4",
-				Precision: "us",
-			})
+			bp, err := influxdb.NewBatchPoints(influxdb.BatchPointsConfig{Database: "ecp4"})
 			if err != nil {
 				errs <- err
 
@@ -132,14 +130,12 @@ func main() {
 			msgBatchChan <- msgs
 			msgs = []*nats.Msg{}
 		case <-fakePublishCountdown:
-			fmt.Println("Tick! Publishing fake metrics")
-
 		POINT_LOOP:
-			for i := 0; i < 1; i++ {
+			for i := 0; i < int(rand.Float32()*1000); i++ {
 				pm := pointMessage{
 					Metric: "page_response_times",
 					Key:    "response_time",
-					Value:  0.05,
+					Value:  rand.Float32() * 10,
 				}
 				b, err := json.Marshal(pm)
 				if err != nil {
