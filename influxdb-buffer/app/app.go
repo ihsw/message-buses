@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"time"
 
+	influxdb "github.com/influxdata/influxdb/client/v2"
 	nats "github.com/nats-io/go-nats"
 )
 
 func main() {
-	// connecting
+	// connecting to nats
 	nc, err := nats.Connect("nats://nats-server:4222")
 	if err != nil {
 		fmt.Printf("Could not connect to nats: %s\n", err.Error())
@@ -17,7 +18,17 @@ func main() {
 	}
 	defer nc.Close()
 
-	// generating a subscription channel
+	// connecting to influxdb
+	ic, err := influxdb.NewHTTPClient(influxdb.HTTPConfig{
+		Addr: "http://influxdb-server:8086",
+	})
+	if err != nil {
+		fmt.Printf("Could not connect to influxdb: %s\n", err.Error())
+
+		return
+	}
+
+	// generating a subscription channel for reading influxdb writes
 	writeChan := make(chan *nats.Msg, 64)
 	_, err = nc.ChanSubscribe("influxdb-writes", writeChan)
 	if err != nil {
@@ -29,8 +40,9 @@ func main() {
 	// starting it up
 	fmt.Println("Starting!")
 	msgLimit := 50
-	msgBatchChan := make(chan []*nats.Msg, 1)
+	msgBatchChan := make(chan []*nats.Msg, 4)
 	msgs := []*nats.Msg{}
+	errs := make(chan error, 64)
 	c := time.Tick(1 * time.Second)
 	for {
 		select {
@@ -45,6 +57,16 @@ func main() {
 			}
 		case msgBatch := <-msgBatchChan:
 			fmt.Println(fmt.Sprintf("Message batch! Message count: %d", len(msgBatch)))
+			bp, err := influxdb.NewBatchPoints(influxdb.BatchPointsConfig{
+				Database:  "ecp4",
+				Precision: "us",
+			})
+			for _, msg := range msgBatch {
+
+			}
+			errs <- ic.Write(bp)
+		case err := <-errs:
+			fmt.Println(fmt.Sprintf("Error: %s", err.Error()))
 		case <-c:
 			fmt.Println("Tick! Loading a batch and resetting!")
 
