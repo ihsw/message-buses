@@ -4,9 +4,17 @@ import (
 	"fmt"
 	"time"
 
+	"encoding/json"
+
 	influxdb "github.com/influxdata/influxdb/client/v2"
 	nats "github.com/nats-io/go-nats"
 )
+
+type pointMessage struct {
+	Metric string  `json:"metric"`
+	Key    string  `json:"key"`
+	Value  float32 `json:"value"`
+}
 
 func main() {
 	// connecting to nats
@@ -27,6 +35,21 @@ func main() {
 
 		return
 	}
+	defer ic.Close()
+
+	// creating database where appropriate
+	q := influxdb.NewQuery("CREATE DATABASE ecp4", "", "")
+	response, err := ic.Query(q)
+	if err != nil {
+		fmt.Printf("Could not create database: %s\n", err.Error())
+
+		return
+	}
+	if err := response.Error(); err != nil {
+		fmt.Printf("Could not create database: %s\n", err.Error())
+
+		return
+	}
 
 	// generating a subscription channel for reading influxdb writes
 	writeChan := make(chan *nats.Msg, 64)
@@ -43,10 +66,13 @@ func main() {
 	msgBatchChan := make(chan []*nats.Msg, 4)
 	msgs := []*nats.Msg{}
 	errs := make(chan error, 64)
-	c := time.Tick(1 * time.Second)
+	msgBatchCountdown := time.Tick(1 * time.Second)
+	fakePublishCountdown := time.Tick(5 * time.Second)
 	for {
 		select {
 		case msg := <-writeChan:
+			fmt.Printf("Received message: %s\n", string(msg.Data))
+
 			msgs = append(msgs, msg)
 
 			if len(msgs) > msgLimit {
@@ -57,21 +83,75 @@ func main() {
 			}
 		case msgBatch := <-msgBatchChan:
 			fmt.Println(fmt.Sprintf("Message batch! Message count: %d", len(msgBatch)))
+
+			if len(msgBatch) == 0 {
+				continue
+			}
+
 			bp, err := influxdb.NewBatchPoints(influxdb.BatchPointsConfig{
 				Database:  "ecp4",
 				Precision: "us",
 			})
-			for _, msg := range msgBatch {
+			if err != nil {
+				errs <- err
 
+				continue
 			}
-			errs <- ic.Write(bp)
+
+			for _, msg := range msgBatch {
+				var p pointMessage
+				err := json.Unmarshal(msg.Data, &p)
+				if err != nil {
+					errs <- err
+
+					continue
+				}
+
+				pt, err := influxdb.NewPoint(
+					p.Metric,
+					map[string]string{},
+					map[string]interface{}{p.Key: p.Value},
+				)
+				if err != nil {
+					errs <- err
+
+					continue
+				}
+
+				bp.AddPoint(pt)
+			}
+
+			if err := ic.Write(bp); err != nil {
+				errs <- err
+			}
 		case err := <-errs:
 			fmt.Println(fmt.Sprintf("Error: %s", err.Error()))
-		case <-c:
+		case <-msgBatchCountdown:
 			fmt.Println("Tick! Loading a batch and resetting!")
 
 			msgBatchChan <- msgs
 			msgs = []*nats.Msg{}
+		case <-fakePublishCountdown:
+			fmt.Println("Tick! Publishing fake metrics")
+
+		POINT_LOOP:
+			for i := 0; i < 1; i++ {
+				pm := pointMessage{
+					Metric: "page_response_times",
+					Key:    "response_time",
+					Value:  0.05,
+				}
+				b, err := json.Marshal(pm)
+				if err != nil {
+					errs <- err
+
+					continue POINT_LOOP
+				}
+
+				if err := nc.Publish("influxdb-writes", b); err != nil {
+					errs <- err
+				}
+			}
 		}
 	}
 }
