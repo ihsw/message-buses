@@ -75,7 +75,7 @@ func main() {
 	// generating parallel subscription channels and multiplexing them down to one
 	writeChan := make(chan *nats.Msg, 1024*8)
 	for i := 0; i < 4; i++ {
-		subWriteChan := make(chan *nats.Msg, 64)
+		subWriteChan := make(chan *nats.Msg, 1024)
 		_, err = nc.ChanSubscribe("influxdb-writes", writeChan)
 		if err != nil {
 			fmt.Printf("Could not subscribe: %s", err.Error())
