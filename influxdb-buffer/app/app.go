@@ -146,6 +146,10 @@ func main() {
 		case err := <-errs:
 			fmt.Println(fmt.Sprintf("Error: %s", err.Error()))
 		case <-msgBatchCountdown:
+			if len(msgs) == 0 {
+				continue
+			}
+
 			fmt.Println("Tick! Loading a batch and resetting!")
 
 			msgBatchChan <- msgs
