@@ -109,11 +109,11 @@ func main() {
 				msgs = []*nats.Msg{}
 			}
 		case msgBatch := <-msgBatchChan:
-			fmt.Println(fmt.Sprintf("Message batch! Message count: %d", len(msgBatch)))
-
 			if len(msgBatch) == 0 {
 				continue
 			}
+
+			fmt.Println(fmt.Sprintf("Message batch! Message count: %d", len(msgBatch)))
 
 			bp, err := influxdb.NewBatchPoints(influxdb.BatchPointsConfig{Database: "ecp4"})
 			if err != nil {
