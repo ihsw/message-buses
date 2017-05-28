@@ -9,4 +9,4 @@ ENV APP_PROJECT influxdb-buffer/app
 RUN go get ./src/$APP_PROJECT/... \
   && go install $APP_PROJECT
 
-CMD ["bash"]
+CMD ["./bin/app"]
