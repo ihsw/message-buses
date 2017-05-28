@@ -72,7 +72,7 @@ func main() {
 		return
 	}
 
-	// generating write channels
+	// generating parallel subscription channels and multiplexing them down to one
 	writeChan := make(chan *nats.Msg, 1024*8)
 	for i := 0; i < 4; i++ {
 		subWriteChan := make(chan *nats.Msg, 64)
