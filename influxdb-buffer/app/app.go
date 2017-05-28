@@ -11,15 +11,33 @@ import (
 	nats "github.com/nats-io/go-nats"
 )
 
+type pointMessageField struct {
+	Key   string  `json:"key"`
+	Value float32 `json:"value"`
+}
+
 type pointMessage struct {
-	Metric string  `json:"metric"`
-	Key    string  `json:"key"`
-	Value  float32 `json:"value"`
+	Metric          string              `json:"metric"`
+	Fields          []pointMessageField `json:"fields"`
+	UnixSeconds     int64               `json:"unix_seconds"`
+	UnixNanoseconds int64               `json:"unix_nanoseconds"`
+}
+
+func (p pointMessage) toInfluxPoint() (*influxdb.Point, error) {
+	fields := map[string]interface{}{}
+	for _, field := range p.Fields {
+		fields[field.Key] = field.Value
+	}
+
+	return influxdb.NewPoint(p.Metric, map[string]string{}, fields, time.Unix(p.UnixSeconds, p.UnixNanoseconds))
+}
+
+func random(min int, max int) int {
+	rand.Seed(time.Now().UnixNano())
+	return rand.Intn(max-min) + min
 }
 
 func main() {
-	rand.Seed(42)
-
 	// connecting to nats
 	nc, err := nats.Connect("nats://nats-server:4222")
 	if err != nil {
@@ -54,13 +72,22 @@ func main() {
 		return
 	}
 
-	// generating a subscription channel for reading influxdb writes
-	writeChan := make(chan *nats.Msg, 64)
-	_, err = nc.ChanSubscribe("influxdb-writes", writeChan)
-	if err != nil {
-		fmt.Printf("Could not subscribe: %s", err.Error())
+	// generating write channels
+	writeChan := make(chan *nats.Msg, 1024*8)
+	for i := 0; i < 4; i++ {
+		subWriteChan := make(chan *nats.Msg, 64)
+		_, err = nc.ChanSubscribe("influxdb-writes", writeChan)
+		if err != nil {
+			fmt.Printf("Could not subscribe: %s", err.Error())
 
-		return
+			return
+		}
+
+		go func() {
+			for msg := range subWriteChan {
+				writeChan <- msg
+			}
+		}()
 	}
 
 	// starting it up
@@ -70,7 +97,6 @@ func main() {
 	msgs := []*nats.Msg{}
 	errs := make(chan error, 64)
 	msgBatchCountdown := time.Tick(1 * time.Second)
-	fakePublishCountdown := time.Tick(50 * time.Millisecond)
 	for {
 		select {
 		case msg := <-writeChan:
@@ -105,17 +131,12 @@ func main() {
 					continue
 				}
 
-				pt, err := influxdb.NewPoint(
-					p.Metric,
-					map[string]string{},
-					map[string]interface{}{p.Key: p.Value},
-				)
+				pt, err := p.toInfluxPoint()
 				if err != nil {
 					errs <- err
 
 					continue
 				}
-
 				bp.AddPoint(pt)
 			}
 
@@ -129,25 +150,6 @@ func main() {
 
 			msgBatchChan <- msgs
 			msgs = []*nats.Msg{}
-		case <-fakePublishCountdown:
-		POINT_LOOP:
-			for i := 0; i < int(rand.Float32()*1000); i++ {
-				pm := pointMessage{
-					Metric: "page_response_times",
-					Key:    "response_time",
-					Value:  rand.Float32() * 10,
-				}
-				b, err := json.Marshal(pm)
-				if err != nil {
-					errs <- err
-
-					continue POINT_LOOP
-				}
-
-				if err := nc.Publish("influxdb-writes", b); err != nil {
-					errs <- err
-				}
-			}
 		}
 	}
 }
