@@ -47,12 +47,10 @@ services:
     build: ./worker
     depends_on:
     - nats-server
-    - telegraf-collector
+    - influxdb-buffer
     environment:
     - NATS_HOST=nats-server
     - NATS_PORT=4222
-    - INFLUX_HOST=telegraf-collector
-    - INFLUX_PORT=8186
     entrypoint:
     - ""
     # - ./bin/run-app
@@ -66,12 +64,10 @@ services:
     - "8080:80"
     depends_on:
     - nats-server
-    - telegraf-collector
+    - influxdb-buffer
     environment:
     - NATS_HOST=nats-server
     - NATS_PORT=4222
-    - INFLUX_HOST=telegraf-collector
-    - INFLUX_PORT=8186
     - APP_PORT=80
     entrypoint:
     - ""
