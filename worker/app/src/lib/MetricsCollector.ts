@@ -12,16 +12,16 @@ interface PointMessage {
   unix_nanoseconds: number;
 }
 
-export interface MetricField {
+export interface MetricFields {
   [key: string]: number;
 }
 
 export class Metric {
   name: string;
-  fields: MetricField[];
+  fields: MetricFields;
   occurredAt: Date;
 
-  constructor(name: string, fields: MetricField[]) {
+  constructor(name: string, fields: MetricFields) {
     this.name = name;
     this.occurredAt = new Date();
     this.fields = fields;
@@ -34,10 +34,16 @@ export class Metric {
     const occurredAtNanoseconds = Number(occurredAtMilliseconds.toString().substr(occurredAtSeconds.toString().length)) * 1000 * 1000;
 
     // converting metric-fields to point-message-fields
+    const pointMessageFields: PointMessageField[] = [];
+    for (const key in this.fields) {
+      pointMessageFields.push(<PointMessageField>{ key: key, value: this.fields[key] });
+    }
+
     return <PointMessage>{
       metric: this.name,
       unix_seconds: occurredAtSeconds,
-      unix_nanoseconds: occurredAtNanoseconds
+      unix_nanoseconds: occurredAtNanoseconds,
+      fields: pointMessageFields
     };
   }
 }
