@@ -73,10 +73,13 @@ func main() {
 	}
 
 	// generating parallel subscription channels and multiplexing them down to one
-	writeChan := make(chan *nats.Msg, 1024*8)
-	for i := 0; i < 4; i++ {
-		subWriteChan := make(chan *nats.Msg, 1024)
-		_, err = nc.ChanSubscribe("influxdb-writes", writeChan)
+	const writeChanBufferSize = 1024
+	const writeChanWorkerCount = 4
+	const writeChanName = "influxdb-writes"
+	writeChan := make(chan *nats.Msg, writeChanBufferSize*writeChanWorkerCount)
+	for i := 0; i < writeChanWorkerCount; i++ {
+		subWriteChan := make(chan *nats.Msg, writeChanBufferSize)
+		_, err = nc.ChanQueueSubscribe(writeChanName, fmt.Sprintf("%s-workers", writeChanName), writeChan)
 		if err != nil {
 			fmt.Printf("Could not subscribe: %s", err.Error())
 
@@ -137,6 +140,7 @@ func main() {
 
 					continue
 				}
+				fmt.Printf("Influx point: %v\n", pt)
 				bp.AddPoint(pt)
 			}
 
