@@ -7,8 +7,7 @@ import { defaultAppName } from "../lib/helper";
 export const ExpectedEnvVars: Array<string | ConnectionInfo> = [
   "APP_PORT",
   new ConnectionInfo("NATS_HOST", "NATS_PORT"),
-  new ConnectionInfo("METRICS_HOST", "METRICS_PORT"),
-  new ConnectionInfo("INFLUX_HOST", "INFLUX_PORT")
+  new ConnectionInfo("METRICS_HOST", "METRICS_PORT")
 ];
 export default async (env: any): Promise<void> => {
   // parsing env vars
