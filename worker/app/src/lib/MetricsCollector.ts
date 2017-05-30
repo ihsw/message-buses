@@ -57,8 +57,6 @@ export class MetricsCollector {
 
   write(message: PointMessage): Promise<void> {
     return new Promise<void>((resolve) => {
-      console.log(message.unix_seconds);
-      console.log(message.unix_nanoseconds);
       this.natsClient.publish(this.queueName, JSON.stringify(message), () => resolve());
     });
   }
