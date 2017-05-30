@@ -162,7 +162,6 @@ export default (messageDriver: IMessageDriver, metricsCollector: MetricsCollecto
       res: res,
       queue: queue,
       callback: (tId: NodeJS.Timer, unsubscribe: IUnsubscribeCallback, msg: string) => {
-        console.log("received");
         messageCount += 1;
         const isFinished = messageCount === count;
 
