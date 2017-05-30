@@ -61,11 +61,11 @@ const main = async () => {
       } catch (err) {
         switch (err["code"]) {
           case "ENOTFOUND":
-            throw new Error(`Host ${host} could not be found`);
+            throw new Error(`Host $${connectionInfo.host} (${host}) could not be found`);
           case "EHOSTUNREACH":
-            throw new Error(`Host ${host} could not be reached`);
+            throw new Error(`Host $${connectionInfo.host} (${host}) could not be reached`);
           case "ECONNREFUSED":
-            throw new Error(`Host ${host} was not accessible at ${port}`);
+            throw new Error(`Host $${connectionInfo.host} (${host}) was not accessible at $${connectionInfo.port} (${port})`);
           default:
             throw err;
         }
