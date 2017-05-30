@@ -73,8 +73,8 @@ func main() {
 	}
 
 	// generating parallel subscription channels and multiplexing them down to one
-	const writeChanBufferSize = 1024 * 64
-	const writeChanWorkerCount = 8
+	const writeChanBufferSize = 1024 * 256
+	const writeChanWorkerCount = 16
 	const writeChanName = "influxdb-writes"
 	writeChan := make(chan *nats.Msg, writeChanBufferSize*writeChanWorkerCount)
 	for i := 0; i < writeChanWorkerCount; i++ {
