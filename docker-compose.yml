@@ -96,5 +96,10 @@ services:
     depends_on:
     - influxdb-server
     - nats-server
+    environment:
+    - INFLUX_HOST=influxdb-server
+    - INFLUX_PORT=8086
+    - NATS_HOST=nats-server
+    - NATS_PORT=4222
     volumes:
     - ./influxdb-buffer:/go/src/influxdb-buffer

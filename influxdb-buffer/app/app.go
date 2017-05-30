@@ -7,6 +7,8 @@ import (
 
 	"encoding/json"
 
+	"os"
+
 	influxdb "github.com/influxdata/influxdb/client/v2"
 	nats "github.com/nats-io/go-nats"
 )
@@ -39,7 +41,7 @@ func random(min int, max int) int {
 
 func main() {
 	// connecting to nats
-	nc, err := nats.Connect("nats://nats-server:4222")
+	nc, err := nats.Connect(fmt.Sprintf("nats://%s:%s", os.Getenv("NATS_HOST"), os.Getenv("NATS_PORT")))
 	if err != nil {
 		fmt.Printf("Could not connect to nats: %s\n", err.Error())
 
@@ -49,7 +51,7 @@ func main() {
 
 	// connecting to influxdb
 	ic, err := influxdb.NewHTTPClient(influxdb.HTTPConfig{
-		Addr: "http://influxdb-server:8086",
+		Addr: fmt.Sprintf("http://%s:%s", os.Getenv("INFLUX_HOST"), os.Getenv("INFLUX_PORT")),
 	})
 	if err != nil {
 		fmt.Printf("Could not connect to influxdb: %s\n", err.Error())
