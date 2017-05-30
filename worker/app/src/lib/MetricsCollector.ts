@@ -1,4 +1,4 @@
-import { NatsDriver } from "../message-drivers/NatsDriver";
+import * as NATS from "nats";
 
 interface PointMessageField {
   key: string;
@@ -45,14 +45,16 @@ export class Metric {
 }
 
 export class MetricsCollector {
-  natsClient: NatsDriver;
+  natsClient: NATS.Client;
   readonly queueName: string = "influxdb-writes";
 
-  constructor(natsClient: NatsDriver) {
+  constructor(natsClient: NATS.Client) {
     this.natsClient = natsClient;
   }
 
   write(message: PointMessage): Promise<void> {
-    return this.natsClient.publish(this.queueName, JSON.stringify(message));
+    return new Promise<void>((resolve) => {
+      this.natsClient.publish(this.queueName, JSON.stringify(message), () => resolve());
+    });
   }
 }

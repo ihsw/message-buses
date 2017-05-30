@@ -4,7 +4,7 @@ import * as zlib from "zlib";
 import { test } from "ava";
 
 import { ISubscribePersistOptions } from "../message-drivers/IMessageDriver";
-import { GetDriver, NatsDriver } from "../message-drivers/NatsDriver";
+import { GetDriver, NatsDriver, GetNatsClient } from "../message-drivers/NatsDriver";
 import { MetricsCollector } from "../lib/MetricsCollector";
 import { getUniqueName } from "../lib/helper";
 import { defaultAppName } from "../lib/test-helper";
@@ -15,10 +15,8 @@ test.before(async () => {
   const driverName = "nats-producer-app-test";
 
   // connecting to the metrics collector
-  const metricsCollector = new MetricsCollector(await GetDriver(`${driverName}-metrics-collector`, defaultAppName, {
-    "NATS_HOST": process.env["METRICS_HOST"],
-    "NATS_PORT": process.env["METRICS_PORT"]
-  }));
+  const metricsNatsClient = GetNatsClient(`${driverName}-metrics-collector`, process.env["METRICS_HOST"], Number(process.env["METRICS_PORT"]));
+  const metricsCollector = new MetricsCollector(metricsNatsClient);
 
   // connecting the message-driver
   messageDriver = await GetDriver(driverName, defaultAppName, process.env);

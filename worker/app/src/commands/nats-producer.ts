@@ -1,5 +1,5 @@
 import { ConnectionInfo } from "./interfaces";
-import { GetDriver } from "../message-drivers/NatsDriver";
+import { GetDriver, GetNatsClient } from "../message-drivers/NatsDriver";
 import { MetricsCollector } from "../lib/MetricsCollector";
 import run from "../lib/producer-app";
 import { defaultAppName } from "../lib/helper";
@@ -12,10 +12,8 @@ export default async (env: any): Promise<void> => {
   const driverName = "nats-producer";
 
   // connecting the metrics-collector
-  const metricsCollector = new MetricsCollector(await GetDriver(`${driverName}-metrics-collector`, defaultAppName, {
-    "NATS_HOST": env["METRICS_HOST"],
-    "NATS_PORT": env["METRICS_PORT"]
-  }));
+  const metricsNatsClient = GetNatsClient(`${driverName}-metrics-collector`, env["METRICS_HOST"], Number(env["METRICS_PORT"]));
+  const metricsCollector = new MetricsCollector(metricsNatsClient);
 
   // connectin the message-driver
   const messageDriver = await GetDriver(driverName, defaultAppName, env);

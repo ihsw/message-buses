@@ -11,7 +11,7 @@ import {
   IUnsubscribeCallback
 } from "./IMessageDriver";
 import { Measurements } from "../lib/influx";
-import { MetricsCollector, Metric, MetricFields } from "../lib/MetricsCollector";
+import { Metric, MetricFields } from "../lib/MetricsCollector";
 
 export const GetNatsClient = (name: string, natsHost: string, natsPort: number): NATS.Client => {
   return NATS.connect(<NATS.ClientOpts>{

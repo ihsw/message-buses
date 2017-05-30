@@ -1,7 +1,7 @@
 import { ConnectionInfo } from "./interfaces";
 import { MetricsCollector } from "../lib/MetricsCollector";
 import { getFilenames, readFile } from "../lib/helper";
-import { GetDriver } from "../message-drivers/NatsDriver";
+import { GetDriver, GetNatsClient } from "../message-drivers/NatsDriver";
 import RfmManager from "../lib/rfm-manager";
 import { defaultAppName } from "../lib/helper";
 
@@ -13,10 +13,8 @@ export default async (env: any, storeDir: string): Promise<void> => {
   const driverName = "nss-populate";
 
   // connecting the metrics-collector
-  const metricsCollector = new MetricsCollector(await GetDriver(`${driverName}-metrics-collector`, defaultAppName, {
-    "NATS_HOST": env["METRICS_HOST"],
-    "NATS_PORT": env["METRICS_PORT"]
-  }));
+  const metricsNatsClient = GetNatsClient(`${driverName}-metrics-collector`, env["METRICS_HOST"], Number(env["METRICS_PORT"]));
+  const metricsCollector = new MetricsCollector(metricsNatsClient);
 
   // connectin the message-driver
   const messageDriver = await GetDriver(driverName, defaultAppName, env);

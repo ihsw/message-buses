@@ -4,7 +4,7 @@ import { test } from "ava";
 import * as supertest from "supertest";
 import * as HttpStatus from "http-status";
 
-import { GetDriver } from "../message-drivers/NatsDriver";
+import { GetDriver, GetNatsClient } from "../message-drivers/NatsDriver";
 import { MetricsCollector } from "../lib/MetricsCollector";
 import RfmManager from "../lib/rfm-manager";
 import getApp from "../lib/consumer-app";
@@ -17,10 +17,8 @@ test.before(async () => {
   const driverName = "nats-consumer-app";
 
   // connecting to the metrics collector
-  const metricsCollector = new MetricsCollector(await GetDriver(`${driverName}-metrics-collector`, defaultAppName, {
-    "NATS_HOST": process.env["METRICS_HOST"],
-    "NATS_PORT": process.env["METRICS_PORT"]
-  }));
+  const metricsNatsClient = GetNatsClient(`${driverName}-metrics-collector`, process.env["METRICS_HOST"], Number(process.env["METRICS_PORT"]));
+  const metricsCollector = new MetricsCollector(metricsNatsClient);
 
   // connecting the message-driver
   const messageDriver = await GetDriver(driverName, defaultAppName, process.env);
