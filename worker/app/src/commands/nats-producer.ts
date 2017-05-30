@@ -2,14 +2,14 @@ import { ConnectionInfo } from "./interfaces";
 import { GetDriver, GetNatsClient } from "../message-drivers/NatsDriver";
 import { MetricsCollector } from "../lib/MetricsCollector";
 import run from "../lib/producer-app";
-import { defaultAppName } from "../lib/helper";
+import { defaultAppName, getUniqueName } from "../lib/helper";
 
 export const ExpectedEnvVars: Array<string | ConnectionInfo> = [
   new ConnectionInfo("NATS_HOST", "NATS_PORT"),
   new ConnectionInfo("METRICS_HOST", "METRICS_PORT")
 ];
 export default async (env: any): Promise<void> => {
-  const driverName = "nats-producer";
+  const driverName = getUniqueName("nats-producer");
 
   // connecting the metrics-collector
   const metricsNatsClient = GetNatsClient(`${driverName}-metrics-collector`, env["METRICS_HOST"], Number(env["METRICS_PORT"]));
