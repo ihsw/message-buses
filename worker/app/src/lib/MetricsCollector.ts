@@ -27,10 +27,9 @@ export class Metric {
     this.fields = fields;
 
     // calculating the occurred-at values
-    const hrTime = process.hrtime();
-    const unixTimeWithMilliseconds = hrTime[0] * 1000 * 1000 + hrTime[1] / 1000;
-    this.occurredAtSeconds = Math.floor(unixTimeWithMilliseconds);
-    this.occurredAtNanoseconds = Math.floor((unixTimeWithMilliseconds - this.occurredAtSeconds) * 1000 * 1000 * 1000);
+    const occurredAtUnix = (new Date()).getTime() / 1000;
+    this.occurredAtSeconds = Math.floor(occurredAtUnix);
+    this.occurredAtNanoseconds = Math.floor((occurredAtUnix - this.occurredAtSeconds) * 1000 * 1000);
   }
 
   toPointMessage(): PointMessage {
