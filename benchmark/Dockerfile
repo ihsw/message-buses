@@ -1,5 +1,8 @@
 FROM yokogawa/siege
 
+CMD apt-get update -y \
+  apt-get install -yq vim
+
 # env vars
 ENV TARGET_HOST 0.0.0.0
 
