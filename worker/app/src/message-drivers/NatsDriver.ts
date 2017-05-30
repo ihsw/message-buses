@@ -11,7 +11,15 @@ import {
   IUnsubscribeCallback
 } from "./IMessageDriver";
 import { Measurements } from "../lib/influx";
-import { Metric, MetricFields } from "../lib/MetricsCollector";
+import { MetricsCollector, Metric, MetricFields } from "../lib/MetricsCollector";
+
+export const GetNatsClient = (name: string, natsHost: string, natsPort: number): NATS.Client => {
+  return NATS.connect(<NATS.ClientOpts>{
+    encoding: "binary",
+    name: name,
+    url: `nats://${natsHost}:${natsPort}`
+  });
+};
 
 export const GetDriver = async (name: string, clusterId: string, env: any): Promise<NatsDriver> => {
   return new Promise<NatsDriver>((resolve) => {
@@ -20,11 +28,7 @@ export const GetDriver = async (name: string, clusterId: string, env: any): Prom
     const natsPort = Number(env["NATS_PORT"]);
 
     // connecting to nats
-    const natsClient = NATS.connect(<NATS.ClientOpts>{
-      encoding: "binary",
-      name: name,
-      url: `nats://${natsHost}:${natsPort}`
-    });
+    const natsClient = GetNatsClient(name, natsHost, natsPort);
 
     // connecting to nss
     const nssClient = NSS.connect(clusterId, name, <NSS.StanOptions>{ nc: natsClient });
@@ -109,7 +113,7 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
         const truncatedEndtimeInMs = Math.round(endTimeInMs * 10) / 10;
 
         const metric = new Metric(Measurements.PUBLISH_TIMES, <MetricFields>{ "duration": truncatedEndtimeInMs });
-        this.metricsCollector.write(metric.toPointMessage()).then(resolve).catch(reject);
+        this.getMetricsCollector().write(metric.toPointMessage()).then(resolve).catch(reject);
       });
     });
   }
