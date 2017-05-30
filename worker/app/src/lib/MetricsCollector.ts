@@ -24,11 +24,13 @@ export class Metric {
 
   constructor(name: string, fields: MetricFields) {
     this.name = name;
+    this.fields = fields;
+
+    // calculating the occurred-at values
     const hrTime = process.hrtime();
     const unixTimeWithMilliseconds = hrTime[0] * 1000 * 1000 + hrTime[1] / 1000;
     this.occurredAtSeconds = Math.floor(unixTimeWithMilliseconds);
     this.occurredAtNanoseconds = Math.floor((unixTimeWithMilliseconds - this.occurredAtSeconds) * 1000 * 1000 * 1000);
-    this.fields = fields;
   }
 
   toPointMessage(): PointMessage {
