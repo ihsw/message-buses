@@ -11,7 +11,7 @@ if [ -z $GCLOUD_INSTANCE ]; then
     exit 1
 fi
 
-GCLOUD_AUTH="$DEFAULT_USER@$@"
+GCLOUD_AUTH="$DEFAULT_USER@$GCLOUD_INSTANCE"
 
 # fetching the ip for the nats and metrics hosts
 NATS_HOST=$(gcloud compute instances list | grep nss-server | awk '{print $4}')
