@@ -140,7 +140,6 @@ func main() {
 
 					continue
 				}
-				fmt.Printf("Influx point: %v\n", pt)
 				bp.AddPoint(pt)
 			}
 
