@@ -12,6 +12,7 @@ gcloud compute ssh $DEFAULT_USER@nss-server -- $'docker start $(docker ps -a | g
 
 # starting up the telegraf-collector on the work servers
 gcloud compute ssh $DEFAULT_USER@nats-consumer -- $'docker start $(docker ps -a | grep -i telegraf-collector | awk \'{print $1}\')'
+gcloud compute ssh $DEFAULT_USER@nats-consumer-high-cpu -- $'docker start $(docker ps -a | grep -i telegraf-collector | awk \'{print $1}\')'
 gcloud compute ssh $DEFAULT_USER@benchmarker -- $'docker start $(docker ps -a | grep -i telegraf-collector | awk \'{print $1}\')'
 gcloud compute ssh $DEFAULT_USER@nats-producer-high-cpu -- $'docker start $(docker ps -a | grep -i telegraf-collector | awk \'{print $1}\')'
 gcloud compute ssh $DEFAULT_USER@nats-producer-regular-cpu -- $'docker start $(docker ps -a | grep -i telegraf-collector | awk \'{print $1}\')'
