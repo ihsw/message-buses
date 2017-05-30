@@ -24,7 +24,10 @@ export class Metric {
 
   constructor(name: string, fields: MetricFields) {
     this.name = name;
-    [this.occurredAtSeconds, this.occurredAtNanoseconds] = process.hrtime();
+    const hrTime = process.hrtime();
+    const unixTimeWithMilliseconds = hrTime[0] * 1000 * 1000 + hrTime[1] / 1000;
+    this.occurredAtSeconds = Math.floor(unixTimeWithMilliseconds);
+    this.occurredAtNanoseconds = Math.floor((unixTimeWithMilliseconds - this.occurredAtSeconds) * 1000 * 1000 * 1000);
     this.fields = fields;
   }
 
@@ -54,6 +57,8 @@ export class MetricsCollector {
 
   write(message: PointMessage): Promise<void> {
     return new Promise<void>((resolve) => {
+      console.log(message.unix_seconds);
+      console.log(message.unix_nanoseconds);
       this.natsClient.publish(this.queueName, JSON.stringify(message), () => resolve());
     });
   }
