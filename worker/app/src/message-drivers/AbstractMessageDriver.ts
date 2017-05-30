@@ -1,9 +1,5 @@
-import { InfluxDB } from "influx";
+import { MetricsCollector } from "../lib/MetricsCollector";
 
 export default class {
-  influx: InfluxDB;
-
-  constructor(influx: InfluxDB) {
-    this.influx = influx;
-  }
+  metricsCollector: MetricsCollector;
 }

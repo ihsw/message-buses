@@ -1,4 +1,4 @@
-import { InfluxDB } from "influx";
+import { MetricsCollector } from "../lib/MetricsCollector";
 
 export interface ISubscribeOptions {
   queue: string;
@@ -29,7 +29,7 @@ export interface IUnsubscribeCallback {
 }
 
 export interface IMessageDriver {
-  influx: InfluxDB;
+  metricsCollector: MetricsCollector;
 
   subscribe(opts: ISubscribeOptions): IUnsubscribeCallback;
   publish(queue: string, message: string): Promise<void>;

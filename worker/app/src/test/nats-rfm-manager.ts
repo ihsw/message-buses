@@ -1,14 +1,25 @@
 import { test } from "ava";
 
-import GetInflux from "../lib/influx";
-import { defaultAppName } from "../lib/test-helper";
 import { GetDriver } from "../message-drivers/NatsDriver";
+import { MetricsCollector } from "../lib/MetricsCollector";
 import RfmManager from "../lib/rfm-manager";
+import { defaultAppName } from "../lib/test-helper";
 
 let rfmManager: RfmManager;
 test.before(async () => {
-  const influx = await GetInflux(defaultAppName, process.env);
-  const messageDriver = await GetDriver(influx, "nats-rfm-manager-test", "ecp4", process.env);
+  const driverName = "nats-rfm-manager-test";
+
+  // connecting to the metrics collector
+  const metricsCollector = new MetricsCollector(await GetDriver(`${driverName}-metrics-collector`, defaultAppName, {
+    "NATS_HOST": process.env["METRICS_HOST"],
+    "NATS_PORT": process.env["METRICS_PORT"]
+  }));
+
+  // connecting the message-driver
+  const messageDriver = await GetDriver(driverName, defaultAppName, process.env);
+  messageDriver.metricsCollector = metricsCollector;
+
+  // instantiating the rfm manager
   rfmManager = new RfmManager(messageDriver);
 });
 

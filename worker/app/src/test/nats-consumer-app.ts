@@ -4,19 +4,29 @@ import { test } from "ava";
 import * as supertest from "supertest";
 import * as HttpStatus from "http-status";
 
-import { defaultAppName } from "../lib/test-helper";
-import GetInflux from "../lib/influx";
 import { GetDriver } from "../message-drivers/NatsDriver";
+import { MetricsCollector } from "../lib/MetricsCollector";
 import RfmManager from "../lib/rfm-manager";
 import getApp from "../lib/consumer-app";
 import { getUniqueName, readFile } from "../lib/helper";
+import { defaultAppName } from "../lib/test-helper";
 
 let app: supertest.SuperTest<supertest.Test>;
 let rfmManager: RfmManager;
 test.before(async () => {
-  const influx = await GetInflux(defaultAppName, process.env);
-  const messageDriver = await GetDriver(influx, "nats-consumer-app-test", "ecp4", process.env);
-  app = supertest(getApp(messageDriver, influx));
+  const driverName = "nats-consumer-app";
+
+  // connecting to the metrics collector
+  const metricsCollector = new MetricsCollector(await GetDriver(`${driverName}-metrics-collector`, defaultAppName, {
+    "NATS_HOST": process.env["METRICS_HOST"],
+    "NATS_PORT": process.env["METRICS_PORT"]
+  }));
+
+  // connecting the message-driver
+  const messageDriver = await GetDriver(driverName, defaultAppName, process.env);
+  messageDriver.metricsCollector = metricsCollector;
+
+  app = supertest(getApp(messageDriver, metricsCollector));
   rfmManager = new RfmManager(messageDriver);
 });
 

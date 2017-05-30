@@ -1,6 +1,5 @@
 import * as process from "process";
 
-import { InfluxDB, IPoint } from "influx";
 import * as NATS from "nats";
 import * as NSS from "node-nats-streaming";
 
@@ -11,9 +10,10 @@ import {
   ISubscribePersistOptions,
   IUnsubscribeCallback
 } from "./IMessageDriver";
-import { BullshitErrorClass, Measurements } from "../lib/influx";
+import { Measurements } from "../lib/influx";
+import { Metric, MetricFields } from "../lib/MetricsCollector";
 
-export const GetDriver = async (influx: InfluxDB, name: string, clusterId: string, env: any): Promise<NatsDriver> => {
+export const GetDriver = async (name: string, clusterId: string, env: any): Promise<NatsDriver> => {
   return new Promise<NatsDriver>((resolve) => {
     // parsing env vars
     const natsHost = env["NATS_HOST"];
@@ -28,7 +28,7 @@ export const GetDriver = async (influx: InfluxDB, name: string, clusterId: strin
 
     // connecting to nss
     const nssClient = NSS.connect(clusterId, name, <NSS.StanOptions>{ nc: natsClient });
-    nssClient.on("connect", () => resolve(new NatsDriver(influx, natsClient, nssClient)));
+    nssClient.on("connect", () => resolve(new NatsDriver(natsClient, nssClient)));
   });
 };
 
@@ -36,9 +36,9 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
   natsClient: NATS.Client;
   nssClient: NSS.Stan;
 
-  constructor(influx: InfluxDB, natsClient: NATS.Client, nssClient: NSS.Stan) {
-    super(influx);
-
+  constructor(natsClient: NATS.Client, nssClient: NSS.Stan) {
+    super();
+    
     this.natsClient = natsClient;
     this.nssClient = nssClient;
   }
@@ -105,23 +105,11 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
       const startTime = process.hrtime();
       this.natsClient.publish(queue, message, () => {
         const [endTimeInSeconds, endTimeInNanoseconds] = process.hrtime(startTime);
-        const endTimeInMs = ((endTimeInSeconds * 1000) + (endTimeInNanoseconds / 1000 / 1000)).toFixed(2);
+        const endTimeInMs = (endTimeInSeconds * 1000) + (endTimeInNanoseconds / 1000 / 1000);
+        const truncatedEndtimeInMs = Math.round(endTimeInMs * 10) / 10;
 
-        const points = [
-          <IPoint>{
-            measurement: Measurements.PUBLISH_TIMES,
-            fields: { duration: endTimeInMs }
-          }
-        ];
-        this.influx.writePoints(points)
-          .then(resolve)
-          .catch((err: Error) => {
-            if (err.constructor.name === BullshitErrorClass) {
-              return;
-            }
-
-            reject(err);
-          });
+        const metric = new Metric(Measurements.PUBLISH_TIMES, <MetricFields>{ "duration": truncatedEndtimeInMs });
+        this.metricsCollector.write(metric.toPointMessage()).then(resolve).catch(reject);
       });
     });
   }

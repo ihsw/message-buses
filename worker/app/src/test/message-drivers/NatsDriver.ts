@@ -2,20 +2,28 @@ import * as process from "process";
 
 import { test } from "ava";
 
-import GetInflux from "../../lib/influx";
-import { defaultAppName } from "../../lib/test-helper";
-
 import {
   IMessageDriver,
   ISubscribeOptions,
   ISubscribePersistOptions
 } from "../../message-drivers/IMessageDriver";
 import { GetDriver } from "../../message-drivers/NatsDriver";
+import { MetricsCollector } from "../../lib/MetricsCollector";
+import { defaultAppName } from "../../lib/test-helper";
 
 let messageDriver: IMessageDriver;
 test.before(async () => {
-  const influx = await GetInflux(defaultAppName, process.env);
-  messageDriver = await GetDriver(influx, "nats-driver-test", "ecp4", process.env);
+  const driverName = "nats-driver-test";
+
+  // connecting to the metrics collector
+  const metricsCollector = new MetricsCollector(await GetDriver(`${driverName}-metrics-collector`, defaultAppName, {
+    "NATS_HOST": process.env["METRICS_HOST"],
+    "NATS_PORT": process.env["METRICS_PORT"]
+  }));
+
+  // connecting the message-driver
+  messageDriver = await GetDriver(driverName, defaultAppName, process.env);
+  messageDriver.metricsCollector = metricsCollector;
 });
 
 test("Driver should publish", async (t) => {

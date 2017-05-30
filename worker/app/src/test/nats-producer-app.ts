@@ -5,16 +5,24 @@ import { test } from "ava";
 
 import { ISubscribePersistOptions } from "../message-drivers/IMessageDriver";
 import { GetDriver, NatsDriver } from "../message-drivers/NatsDriver";
-import GetInflux from "../lib/influx";
+import { MetricsCollector } from "../lib/MetricsCollector";
 import { getUniqueName } from "../lib/helper";
 import { defaultAppName } from "../lib/test-helper";
 import run from "../lib/producer-app";
 
 let messageDriver: NatsDriver;
 test.before(async () => {
-  // connecting to influx and the message-driver
-  const influx = await GetInflux(defaultAppName, process.env);
-  messageDriver = await GetDriver(influx, "nats-producer-app-test", "ecp4", process.env);
+  const driverName = "nats-producer-app-test";
+
+  // connecting to the metrics collector
+  const metricsCollector = new MetricsCollector(await GetDriver(`${driverName}-metrics-collector`, defaultAppName, {
+    "NATS_HOST": process.env["METRICS_HOST"],
+    "NATS_PORT": process.env["METRICS_PORT"]
+  }));
+
+  // connecting the message-driver
+  messageDriver = await GetDriver(driverName, defaultAppName, process.env);
+  messageDriver.metricsCollector = metricsCollector;
 
   // starting up the queues
   run(messageDriver, false);
