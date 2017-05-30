@@ -10,5 +10,5 @@ ECP4_INSTANCES=$(gcloud compute instances list --filter=ecp4 | tail -n +2 | awk 
 # going over each of them and stopping them
 for instance in $ECP4_INSTANCES
 do
-	gcloud compute stop $instance
+	gcloud compute instances stop $instance
 done
