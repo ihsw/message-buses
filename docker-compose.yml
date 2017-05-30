@@ -66,6 +66,7 @@ services:
     - "8080:80"
     depends_on:
     - nats-server
+    - influxdb-buffer
     environment:
     - NATS_HOST=nats-server
     - NATS_PORT=4222
