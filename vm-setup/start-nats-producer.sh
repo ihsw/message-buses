@@ -13,6 +13,10 @@ fi
 
 GCLOUD_AUTH="$DEFAULT_USER@$@"
 
+# fetching the ip for the nats and metrics hosts
+NATS_HOST=$(gcloud compute instances list | grep nss-server | awk '{print $4}')
+METRICS_HOST=$(gcloud compute instances list | grep influxdb-server | awk '{print $4}')
+
 # building the image and running it
-gcloud compute ssh $GCLOUD_AUTH -- 'cd ./message-buses && docker build -t ihsw/nats-producer ./worker'
-gcloud compute ssh $GCLOUD_AUTH -- 'docker run -it -e NATS_HOST=10.0.0.2 -e INFLUX_HOST=10.0.0.7 --entrypoint="" ihsw/nats-producer ./bin/run-app nats-producer'
+gcloud compute ssh $GCLOUD_AUTH -- "cd ./message-buses && docker build -t ihsw/nats-producer ./worker"
+gcloud compute ssh $GCLOUD_AUTH -- "docker run -it -e NATS_HOST=$NATS_HOST -e METRICS_HOST=$METRICS_HOST --entrypoint="" ihsw/nats-producer ./bin/run-app nats-producer"
