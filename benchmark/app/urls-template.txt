@@ -1,1 +1,3 @@
-http://$TARGET_HOST/many/count/1000
+http://$TARGET_HOST/many/count/40
+http://$TARGET_HOST/plain
+http://$TARGET_HOST/plain
