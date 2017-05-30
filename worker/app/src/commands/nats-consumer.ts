@@ -2,7 +2,7 @@ import { ConnectionInfo } from "./interfaces";
 import { GetDriver, GetNatsClient } from "../message-drivers/NatsDriver";
 import { MetricsCollector } from "../lib/MetricsCollector";
 import getApp from "../lib/consumer-app";
-import { defaultAppName } from "../lib/helper";
+import { defaultAppName, getUniqueName } from "../lib/helper";
 
 export const ExpectedEnvVars: Array<string | ConnectionInfo> = [
   "APP_PORT",
@@ -13,7 +13,7 @@ export default async (env: any): Promise<void> => {
   // parsing env vars
   const appPort = Number(env["APP_PORT"]);
 
-  const driverName = "nats-consumer";
+  const driverName = getUniqueName("nats-consumer");
 
   // connecting the metrics-collector
   const metricsNatsClient = GetNatsClient(`${driverName}-metrics-collector`, env["METRICS_HOST"], Number(env["METRICS_PORT"]));
