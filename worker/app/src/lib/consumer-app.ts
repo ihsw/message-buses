@@ -40,13 +40,7 @@ const subscribeHandler = (opts: ISubscribeHandlerOptions) => {
 
   const unsubscribe = opts.messageDriver.subscribe(<ISubscribePersistOptions>{
     queue: opts.queue,
-    callback: (msg) => {
-      if (opts.res.headersSent) {
-        return;
-      }
-
-      opts.callback(tId, unsubscribe, msg);
-    },
+    callback: (msg) => opts.callback(tId, unsubscribe, msg),
     timeoutInMs: queueTimeout,
     timeoutCallback: () => {
       clearTimeout(tId);
@@ -168,6 +162,7 @@ export default (messageDriver: IMessageDriver, metricsCollector: MetricsCollecto
       res: res,
       queue: queue,
       callback: (tId: NodeJS.Timer, unsubscribe: IUnsubscribeCallback, msg: string) => {
+        console.log("received");
         messageCount += 1;
         const isFinished = messageCount === count;
 
