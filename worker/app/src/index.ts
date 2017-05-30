@@ -1,4 +1,6 @@
 import * as process from "process";
+import * as cluster from "cluster";
+import * as os from "os";
 
 import * as program from "commander";
 
@@ -52,8 +54,28 @@ program.command("nats-consumer")
       });
   });
 
-// parsing process args
-program.parse(process.argv);
+// parsing process args and optionally clustering
+const main = () => program.parse(process.argv);
+const isClustering = !!process.env["IS_CLUSTERING"];
+if (!isClustering) {
+  main();
+} else {
+  if (cluster.isMaster) {
+    console.log(`Starting master ${process.pid}`);
+
+    for (let i = 0; i < os.cpus().length; i++) {
+      cluster.fork();
+    }
+
+    cluster.on("exit", (worker, code) => {
+      console.log(`Worker ${worker.process.pid} died with code ${code}`);
+    });
+  } else {
+    console.log(`Starting worker ${process.pid}`);
+
+    main();
+  }
+}
 
 // optionally dumping help when no command is provided
 if (process.argv.slice(2).length === 0) {
