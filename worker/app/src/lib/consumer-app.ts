@@ -88,6 +88,7 @@ export default (messageDriver: IMessageDriver, metricsCollector: MetricsCollecto
   });
 
   // setting up routes
+  app.get("/", (_, res) => res.send("Hello, world!"));
   app.get("/timeout", (_, res) => {
     // setting up a full request timeout
     const tId = setTimeout(() => {
