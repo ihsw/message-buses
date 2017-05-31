@@ -13,5 +13,4 @@ apt-get install \
    stable" \
 && apt-get update -y \
 && apt-get install docker-ce -yq \
-&& docker run hello-world \
-&& usermod -aG docker $USER
+&& docker run hello-world

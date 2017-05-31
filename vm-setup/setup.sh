@@ -32,6 +32,7 @@ GCLOUD_AUTH="$DEFAULT_USER@$GCLOUD_HOST"
 # installing docker
 scp $SCP_ARGS ./vm-setup/install-docker.sh $SCP_AUTH:~
 gcloud compute ssh $GCLOUD_AUTH -- "sudo ~/install-docker.sh"
+gcloud compute ssh $GCLOUD_AUTH -- 'sudo usermod -aG docker $USER && docker run hello-world'
 
 # cloning the repo and starting up a telegraf collector
 scp $SCP_ARGS $GITHUB_IDENT_FILE $SCP_AUTH:~/.ssh
