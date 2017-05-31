@@ -82,8 +82,6 @@ export default async (messageDriver: IMessageDriver, _: MetricsCollector, durati
     // starting the loop up
     console.log("Running benchmark");
     const loop = () => {
-      console.log(`Spinning up workload of size ${parsedWorkload}`);
-
       const promises: Promise<void>[] = [];
       for (let i = 0; i < parsedWorkload; i++) {
         promises.push(waitingRequest(messageDriver));
