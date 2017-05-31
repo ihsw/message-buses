@@ -16,7 +16,6 @@ const waitingRequest = (messageDriver: IMessageDriver): Promise<void> => {
 
     // subscribing to that unique response queue
     let messageCount = 0;
-    console.log(`Waiting for ${expectedResponseMessages} messages`);
     const unsubscribe = messageDriver.subscribe(<ISubscribeOptions>{
       queue: responseQueue,
       parallel: true,
