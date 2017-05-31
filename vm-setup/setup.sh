@@ -2,7 +2,7 @@
 
 # misc
 GCLOUD_HOST=$1
-SCP_IDENT="~/.ssh/google_compute_engine"
+SCP_IDENT="$HOME/.ssh/google_compute_engine"
 DEFAULT_USER="gcloud-from-work"
 
 # validation
@@ -30,8 +30,8 @@ SCP_ARGS="-i $SCP_IDENT"
 GCLOUD_AUTH="$DEFAULT_USER@$GCLOUD_HOST"
 
 # installing docker
-scp $SCP_ARGS ./vm-setup/install-docker $SCP_AUTH:~
-gcloud compute ssh $GCLOUD_AUTH -- "sudo ~/install-docker"
+scp $SCP_ARGS ./vm-setup/install-docker.sh $SCP_AUTH:~
+gcloud compute ssh $GCLOUD_AUTH -- "sudo ~/install-docker.sh"
 
 # cloning the repo and starting up a telegraf collector
 scp $SCP_ARGS $GITHUB_IDENT_FILE $SCP_AUTH:~/.ssh
