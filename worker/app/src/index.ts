@@ -87,7 +87,7 @@ if (!isClustering) {
     }
 
     cluster.on("exit", (worker, code) => {
-      console.log(`Worker ${worker.process.pid} died with code ${code}`);
+      console.log(`Worker ${worker.process.pid} exited with code ${code}`);
     });
   } else {
     console.log(`Starting worker ${process.pid}`);
