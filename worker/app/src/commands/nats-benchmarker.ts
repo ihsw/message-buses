@@ -8,7 +8,7 @@ export const ExpectedEnvVars: Array<string | ConnectionInfo> = [
   new ConnectionInfo("NATS_HOST", "NATS_PORT"),
   new ConnectionInfo("METRICS_HOST", "METRICS_PORT")
 ];
-export default async (env: any, duration: string): Promise<void> => {
+export default async (env: any, duration: string, workload: string): Promise<void> => {
   const driverName = getUniqueName("benchmarker");
 
   // connecting the metrics-collector
@@ -20,5 +20,5 @@ export default async (env: any, duration: string): Promise<void> => {
   messageDriver.metricsCollector = metricsCollector;
 
   // running it out
-  return run(messageDriver, metricsCollector, duration);
+  return run(messageDriver, metricsCollector, duration, workload);
 };

@@ -11,9 +11,10 @@ export const ExpectedEnvVars: Array<string | ConnectionInfo> = [
   new ConnectionInfo("NATS_HOST", "NATS_PORT"),
   new ConnectionInfo("METRICS_HOST", "METRICS_PORT")
 ];
-export default async (messageDriver: IMessageDriver, _: MetricsCollector, duration: string): Promise<void> => {
+export default async (messageDriver: IMessageDriver, _: MetricsCollector, duration: string, workload: string): Promise<void> => {
   // parsing the duration
   const parsedDuration: number = parseDuration(duration);
+  const parsedWorkload = Number(workload);
 
   // starting up an execution timer
   const startTime = process.hrtime();
@@ -23,7 +24,7 @@ export default async (messageDriver: IMessageDriver, _: MetricsCollector, durati
   };
 
   // running it out
-  return new Promise<void>((resolve) => {
+  return new Promise<void>((resolve, reject) => {
     let running = true;
 
     // setting up a timeout
@@ -47,30 +48,43 @@ export default async (messageDriver: IMessageDriver, _: MetricsCollector, durati
     // starting the loop up
     console.log("Running benchmark");
     const loop = () => {
-      const responseQueue = getUniqueName("hello-world");
+      console.log(`Spinning up workload of size ${parsedWorkload}`);
 
-      const unsubscribe = messageDriver.subscribe(<ISubscribeOptions>{
-        queue: responseQueue,
-        parallel: true,
-        callback: () => {
-          if (!running) {
-            exit();
+      const promises: Promise<void>[] = [];
+      for (let i = 0; i < parsedWorkload; i++) {
+        promises.push(new Promise<void>((loopResolve, loopReject) => {
+          // generating a unique response queue name
+          const responseQueue = getUniqueName("hello-world");
 
-            return;
-          }
+          // subscribing to that unique response queue
+          const unsubscribe = messageDriver.subscribe(<ISubscribeOptions>{
+            queue: responseQueue,
+            parallel: true,
+            callback: () => loopResolve(),
+            timeoutInMs: 5*1000,
+            timeoutCallback: () => {
+              unsubscribe();
 
-          loop();
-        },
-        timeoutInMs: 5*1000,
-        timeoutCallback: () => {
-          unsubscribe();
+              loopReject(new Error("Timed out!"));
+            }
+          });
 
+          // flagging that queue for a response
+          messageDriver.publish("queues", responseQueue);
+        }));
+      }
+
+      Promise.all(promises).then(() => {
+        if (!running) {
           exit();
-        }
-      });
 
-      messageDriver.publish("queues", responseQueue);
+          return;
+        }
+
+        loop();
+      }).catch(reject);
     };
+
     loop();
   });
 };

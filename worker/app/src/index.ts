@@ -63,10 +63,12 @@ program.command("nats-consumer")
 const natsBenchmarkerCommand = program.command("nats-benchmarker")
   .description("Running benchmark tests for a given duration")
   .option("-d, --duration <duration>", "Duration")
+  .option("-w, --workload <workload>", "workload")
   .action(() => {
     const duration = natsBenchmarkerCommand.opts()["duration"];
+    const workload = natsBenchmarkerCommand.opts()["workload"];
 
-    NatsBenchmarker(process.env, duration).then(() => process.exit(0))
+    NatsBenchmarker(process.env, duration, workload).then(() => process.exit(0))
       .catch((err) => {
         console.error(err);
         process.exit(1);
