@@ -20,5 +20,5 @@ export default async (env: any, duration: string): Promise<void> => {
   messageDriver.metricsCollector = metricsCollector;
 
   // running it out
-  run(messageDriver, metricsCollector, duration);
+  return run(messageDriver, metricsCollector, duration);
 };
