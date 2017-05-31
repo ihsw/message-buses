@@ -7,6 +7,41 @@ import { IMessageDriver, ISubscribeOptions } from "../message-drivers/IMessageDr
 import { MetricsCollector } from "../lib/MetricsCollector";
 import { getUniqueName } from "../lib/helper";
 
+const waitingRequest = (messageDriver: IMessageDriver): Promise<void> => {
+  const expectedResponseMessages = 30;
+
+  return new Promise<void>((resolve, reject) => {
+    // generating a unique response queue name
+    const responseQueue = getUniqueName("hello-world");
+
+    // subscribing to that unique response queue
+    let messageCount = 0;
+    console.log(`Waiting for ${expectedResponseMessages} messages`);
+    const unsubscribe = messageDriver.subscribe(<ISubscribeOptions>{
+      queue: responseQueue,
+      parallel: true,
+      callback: () => {
+        messageCount += 1;
+        const isFinished = messageCount === expectedResponseMessages;
+
+        if (isFinished) {
+          unsubscribe();
+          resolve();
+        }
+      },
+      timeoutInMs: 5*1000,
+      timeoutCallback: () => {
+        unsubscribe();
+
+        reject(new Error("Timed out!"));
+      }
+    });
+
+    // flagging this queue as waiting for messages
+    messageDriver.publish("queueWaiting", JSON.stringify({ queue: responseQueue, count: expectedResponseMessages }));
+  });
+};
+
 export const ExpectedEnvVars: Array<string | ConnectionInfo> = [
   new ConnectionInfo("NATS_HOST", "NATS_PORT"),
   new ConnectionInfo("METRICS_HOST", "METRICS_PORT")
@@ -28,7 +63,7 @@ export default async (messageDriver: IMessageDriver, _: MetricsCollector, durati
     let running = true;
 
     // setting up a timeout
-    const tId = setTimeout(() => { running = false }, parsedDuration);
+    const tId = setTimeout(() => { running = false; }, parsedDuration);
 
     // defining the exit
     const exit = () => {
@@ -52,26 +87,7 @@ export default async (messageDriver: IMessageDriver, _: MetricsCollector, durati
 
       const promises: Promise<void>[] = [];
       for (let i = 0; i < parsedWorkload; i++) {
-        promises.push(new Promise<void>((loopResolve, loopReject) => {
-          // generating a unique response queue name
-          const responseQueue = getUniqueName("hello-world");
-
-          // subscribing to that unique response queue
-          const unsubscribe = messageDriver.subscribe(<ISubscribeOptions>{
-            queue: responseQueue,
-            parallel: true,
-            callback: () => loopResolve(),
-            timeoutInMs: 5*1000,
-            timeoutCallback: () => {
-              unsubscribe();
-
-              loopReject(new Error("Timed out!"));
-            }
-          });
-
-          // flagging that queue for a response
-          messageDriver.publish("queues", responseQueue);
-        }));
+        promises.push(waitingRequest(messageDriver));
       }
 
       Promise.all(promises).then(() => {
