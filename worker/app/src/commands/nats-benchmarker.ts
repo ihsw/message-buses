@@ -5,11 +5,10 @@ import run from "../lib/benchmarker";
 import { defaultAppName, getUniqueName } from "../lib/helper";
 
 export const ExpectedEnvVars: Array<string | ConnectionInfo> = [
-  "APP_PORT",
   new ConnectionInfo("NATS_HOST", "NATS_PORT"),
   new ConnectionInfo("METRICS_HOST", "METRICS_PORT")
 ];
-export default async (env: any): Promise<void> => {
+export default async (env: any, duration: string): Promise<void> => {
   const driverName = getUniqueName("benchmarker");
 
   // connecting the metrics-collector
@@ -21,5 +20,5 @@ export default async (env: any): Promise<void> => {
   messageDriver.metricsCollector = metricsCollector;
 
   // running it out
-  run(messageDriver, metricsCollector);
+  run(messageDriver, metricsCollector, duration);
 };

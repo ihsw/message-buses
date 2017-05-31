@@ -60,13 +60,13 @@ program.command("nats-consumer")
   });
 
 // running benchmark tests for a given duration
-program.command("nats-benchmarker")
+const natsBenchmarkerCommand = program.command("nats-benchmarker")
   .description("Running benchmark tests for a given duration")
+  .option("-d, --duration <duration>", "Duration")
   .action(() => {
-    NatsBenchmarker(process.env)
-      .then(() => {
-        console.log("Finished running benchmark!");
-      })
+    const duration = natsBenchmarkerCommand.opts()["duration"];
+
+    NatsBenchmarker(process.env, duration).then(() => process.exit(0))
       .catch((err) => {
         console.error(err);
         process.exit(1);
