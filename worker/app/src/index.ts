@@ -4,7 +4,12 @@ import * as os from "os";
 
 import * as program from "commander";
 
-import { NatsConsumer, NatsProducer, NssPopulate } from "./commands";
+import {
+  NatsConsumer,
+  NatsProducer,
+  NssPopulate,
+  NatsBenchmarker
+} from "./commands";
 
 // program definition
 program.version("0.0.1");
@@ -47,6 +52,20 @@ program.command("nats-consumer")
       .then(() => {
         console.log(`Listening on ${process.env["APP_PORT"]}`);
         process.on("SIGINT", () => process.exit(0));
+      })
+      .catch((err) => {
+        console.error(err);
+        process.exit(1);
+      });
+  });
+
+// running benchmark tests for a given duration
+program.command("nats-benchmarker")
+  .description("Running benchmark tests for a given duration")
+  .action(() => {
+    NatsBenchmarker(process.env)
+      .then(() => {
+        console.log("Finished running benchmark!");
       })
       .catch((err) => {
         console.error(err);
