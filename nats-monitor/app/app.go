@@ -98,6 +98,7 @@ func main() {
 	outMsgsRate := rate{name: "out_messages_rate"}
 	inBytesRate := rate{name: "in_bytes_rate"}
 	outBytesRate := rate{name: "out_bytes_rate"}
+	fmt.Println("Polling for stats")
 	for _ = range tick {
 		// fetching stats
 		varz, err := request(engine)
