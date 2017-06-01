@@ -110,7 +110,7 @@ export default async (messageDriver: IMessageDriver, _: MetricsCollector, durati
     const loop = () => {
       const promises: Promise<void>[] = [];
       for (let i = 0; i < parsedWorkload; i++) {
-        promises.push(request(messageDriver));
+        promises.push(waitingRequest(messageDriver));
       }
 
       Promise.all(promises).then(() => {
