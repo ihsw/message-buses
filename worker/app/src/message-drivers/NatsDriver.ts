@@ -112,7 +112,10 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
         const endTimeInMs = (endTimeInSeconds * 1000) + (endTimeInNanoseconds / 1000 / 1000);
         const truncatedEndtimeInMs = Math.round(endTimeInMs * 10) / 10;
 
-        const metric = new Metric(Measurements.PUBLISH_TIMES, <MetricFields>{ "duration": truncatedEndtimeInMs });
+        const metric = new Metric(Measurements.PUBLISH_TIMES, <MetricFields>{
+          "duration": truncatedEndtimeInMs,
+          "hit": 1
+        });
         this.getMetricsCollector().write(metric.toPointMessage()).then(resolve).catch(reject);
       });
     });
