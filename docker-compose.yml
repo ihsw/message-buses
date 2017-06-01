@@ -43,6 +43,7 @@ services:
     build: ./nats-server
     ports:
     - "4442:4442"
+    - "8222:8222"
   nats-producer:
     build: ./worker
     depends_on:
@@ -114,3 +115,17 @@ services:
     - NATS_PORT=4222
     volumes:
     - ./influxdb-buffer:/go/src/influxdb-buffer
+
+  # monitors an instance of nats and reports usage stats to influx
+  nats-monitor:
+    build: ./nats-monitor
+    depends_on:
+    - influxdb-server
+    - nats-server
+    environment:
+    - INFLUX_HOST=influxdb-server
+    - INFLUX_PORT=8086
+    - NATS_HOST=nats-server
+    - NATS_INFO_PORT=8222
+    volumes:
+    - ./nats-monitor/app:/go/src/nats-monitor
