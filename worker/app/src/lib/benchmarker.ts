@@ -7,7 +7,7 @@ import { IMessageDriver, ISubscribeOptions } from "../message-drivers/IMessageDr
 import { MetricsCollector } from "../lib/MetricsCollector";
 import { getUniqueName } from "../lib/helper";
 
-const waitingRequest = (messageDriver: IMessageDriver): Promise<void> => {
+export const waitingRequest = (messageDriver: IMessageDriver): Promise<void> => {
   const expectedResponseMessages = 5;
 
   return new Promise<void>((resolve, reject) => {
@@ -38,6 +38,32 @@ const waitingRequest = (messageDriver: IMessageDriver): Promise<void> => {
 
     // flagging this queue as waiting for messages
     messageDriver.publish("queueWaiting", JSON.stringify({ queue: responseQueue, count: expectedResponseMessages }));
+  });
+};
+
+export const request = (messageDriver: IMessageDriver): Promise<void> => {
+  return new Promise<void>((resolve, reject) => {
+    // generating a unique response queue name
+    const responseQueue = getUniqueName("hello-world");
+
+    // subscribing to that unique response queue
+    const unsubscribe = messageDriver.subscribe(<ISubscribeOptions>{
+      queue: responseQueue,
+      parallel: true,
+      callback: () => {
+        unsubscribe();
+        resolve();
+      },
+      timeoutInMs: 5*1000,
+      timeoutCallback: () => {
+        unsubscribe();
+
+        reject(new Error("Timed out!"));
+      }
+    });
+
+    // flagging this queue as waiting for messages
+    messageDriver.publish("queue", JSON.stringify({ queue: responseQueue }));
   });
 };
 
@@ -84,7 +110,7 @@ export default async (messageDriver: IMessageDriver, _: MetricsCollector, durati
     const loop = () => {
       const promises: Promise<void>[] = [];
       for (let i = 0; i < parsedWorkload; i++) {
-        promises.push(waitingRequest(messageDriver));
+        promises.push(request(messageDriver));
       }
 
       Promise.all(promises).then(() => {
