@@ -53,9 +53,8 @@ services:
     - NATS_PORT=4222
     - METRICS_HOST=nats-server
     - METRICS_PORT=4222
-    entrypoint:
-    - ./bin/run-app
     command:
+    - ./bin/run-app
     - nats-producer
     volumes:
     - ./worker/app:/srv/app
@@ -72,9 +71,8 @@ services:
     - METRICS_HOST=nats-server
     - METRICS_PORT=4222
     - APP_PORT=80
-    entrypoint:
-    - ./bin/run-app
     command:
+    - ./bin/run-app
     - nats-consumer
     volumes:
     - ./worker/app:/srv/app
@@ -88,10 +86,8 @@ services:
     - NATS_PORT=4222
     - METRICS_HOST=nats-server
     - METRICS_PORT=4222
-    entrypoint:
-    # - ./bin/run-app
-    - ""
     command:
+    - ./bin/run-app
     - nats-benchmarker
     volumes:
     - ./worker/app:/srv/app
