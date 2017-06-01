@@ -22,7 +22,7 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "4.2.0"
+      "version": "4.3.0-beta1"
     },
     {
       "type": "panel",
@@ -50,7 +50,7 @@
   "rows": [
     {
       "collapse": false,
-      "height": 148,
+      "height": 126,
       "panels": [
         {
           "aliasColors": {},
@@ -168,7 +168,7 @@
     },
     {
       "collapse": false,
-      "height": 150,
+      "height": 127,
       "panels": [
         {
           "aliasColors": {},
@@ -286,125 +286,7 @@
     },
     {
       "collapse": false,
-      "height": 165,
-      "panels": [
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "${DS_ECP4}",
-          "fill": 1,
-          "id": 3,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "span": 12,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "alias": "Publish Time",
-              "dsType": "influxdb",
-              "groupBy": [
-                {
-                  "params": [
-                    "1s"
-                  ],
-                  "type": "time"
-                },
-                {
-                  "params": [
-                    "null"
-                  ],
-                  "type": "fill"
-                }
-              ],
-              "measurement": "publish_times",
-              "orderByTime": "ASC",
-              "policy": "default",
-              "refId": "A",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "duration"
-                    ],
-                    "type": "field"
-                  },
-                  {
-                    "params": [],
-                    "type": "mean"
-                  }
-                ]
-              ],
-              "tags": []
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "Publish Times",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": "Milliseconds",
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ]
-        }
-      ],
-      "repeat": null,
-      "repeatIteration": null,
-      "repeatRowId": null,
-      "showTitle": false,
-      "title": "Dashboard Row",
-      "titleSize": "h6"
-    },
-    {
-      "collapse": false,
-      "height": 250,
+      "height": 129,
       "panels": [
         {
           "aliasColors": {},
@@ -438,7 +320,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "alias": "Publish Count",
+              "alias": "Message Rate",
               "dsType": "influxdb",
               "groupBy": [
                 {
@@ -454,7 +336,7 @@
                   "type": "fill"
                 }
               ],
-              "measurement": "publish_times",
+              "measurement": "nats_performance",
               "orderByTime": "ASC",
               "policy": "default",
               "refId": "A",
@@ -463,13 +345,13 @@
                 [
                   {
                     "params": [
-                      "duration"
+                      "in_messages_rate"
                     ],
                     "type": "field"
                   },
                   {
                     "params": [],
-                    "type": "count"
+                    "type": "mean"
                   }
                 ]
               ],
@@ -479,7 +361,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Publish Count (per second)",
+          "title": "Message Rate",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -496,7 +378,7 @@
           "yaxes": [
             {
               "format": "short",
-              "label": "Per Second",
+              "label": "Per second",
               "logBase": 1,
               "max": null,
               "min": null,
@@ -522,11 +404,13 @@
     },
     {
       "collapse": false,
-      "height": 250,
+      "height": 163,
       "panels": [
         {
           "aliasColors": {},
           "bars": false,
+          "dashLength": 10,
+          "dashes": false,
           "datasource": "${DS_ECP4}",
           "fill": 1,
           "id": 5,
@@ -548,12 +432,13 @@
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
+          "spaceLength": 10,
           "span": 12,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "alias": "Response Time",
+              "alias": "Transfer throughput",
               "dsType": "influxdb",
               "groupBy": [
                 {
@@ -563,7 +448,8 @@
                   "type": "time"
                 }
               ],
-              "measurement": "page_response_times",
+              "measurement": "nats_performance",
+              "orderByTime": "ASC",
               "policy": "default",
               "refId": "A",
               "resultFormat": "time_series",
@@ -571,13 +457,19 @@
                 [
                   {
                     "params": [
-                      "duration"
+                      "in_bytes_rate"
                     ],
                     "type": "field"
                   },
                   {
                     "params": [],
                     "type": "mean"
+                  },
+                  {
+                    "params": [
+                      " / 1000000"
+                    ],
+                    "type": "math"
                   }
                 ]
               ],
@@ -587,7 +479,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "HTTP Response Times",
+          "title": "Transfer Rate",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -595,6 +487,7 @@
           },
           "type": "graph",
           "xaxis": {
+            "buckets": null,
             "mode": "time",
             "name": null,
             "show": true,
@@ -603,7 +496,7 @@
           "yaxes": [
             {
               "format": "short",
-              "label": "Milliseconds",
+              "label": "MB",
               "logBase": 1,
               "max": null,
               "min": null,
@@ -635,7 +528,7 @@
     "list": []
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {
@@ -665,5 +558,5 @@
   },
   "timezone": "browser",
   "title": "Performance",
-  "version": 3
+  "version": 10
 }
