@@ -63,7 +63,7 @@ export const request = (messageDriver: IMessageDriver): Promise<void> => {
     });
 
     // flagging this queue as waiting for messages
-    messageDriver.publish("queues", JSON.stringify({ queue: responseQueue }));
+    messageDriver.publish("queues", responseQueue);
   });
 };
 
