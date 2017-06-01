@@ -51,12 +51,17 @@ export class Metric {
 export class MetricsCollector {
   natsClient: NATS.Client;
   readonly queueName: string = "influxdb-writes";
+  disabled: boolean = false;
 
   constructor(natsClient: NATS.Client) {
     this.natsClient = natsClient;
   }
 
   write(message: PointMessage): Promise<void> {
+    if (this.disabled) {
+      return Promise.resolve();
+    }
+
     return new Promise<void>((resolve) => {
       this.natsClient.publish(this.queueName, JSON.stringify(message), () => resolve());
     });

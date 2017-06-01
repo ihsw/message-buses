@@ -1,4 +1,4 @@
-// import * as process from "process";
+import * as process from "process";
 
 import * as NATS from "nats";
 import * as NSS from "node-nats-streaming";
@@ -10,8 +10,8 @@ import {
   ISubscribePersistOptions,
   IUnsubscribeCallback
 } from "./IMessageDriver";
-// import { Measurements } from "../lib/influx";
-// import { Metric, MetricFields } from "../lib/MetricsCollector";
+import { Measurements } from "../lib/influx";
+import { Metric, MetricFields } from "../lib/MetricsCollector";
 
 export const GetNatsClient = (name: string, natsHost: string, natsPort: number): NATS.Client => {
   return NATS.connect(<NATS.ClientOpts>{
@@ -105,16 +105,15 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
   }
 
   publish(queue: string, message: string | Buffer): Promise<void> {
-    return new Promise<void>((resolve) => {
-      // const startTime = process.hrtime();
+    return new Promise<void>((resolve, reject) => {
+      const startTime = process.hrtime();
       this.natsClient.publish(queue, message, () => {
-        resolve();
-        // const [endTimeInSeconds, endTimeInNanoseconds] = process.hrtime(startTime);
-        // const endTimeInMs = (endTimeInSeconds * 1000) + (endTimeInNanoseconds / 1000 / 1000);
-        // const truncatedEndtimeInMs = Math.round(endTimeInMs * 10) / 10;
+        const [endTimeInSeconds, endTimeInNanoseconds] = process.hrtime(startTime);
+        const endTimeInMs = (endTimeInSeconds * 1000) + (endTimeInNanoseconds / 1000 / 1000);
+        const truncatedEndtimeInMs = Math.round(endTimeInMs * 10) / 10;
 
-        // const metric = new Metric(Measurements.PUBLISH_TIMES, <MetricFields>{ "duration": truncatedEndtimeInMs });
-        // this.getMetricsCollector().write(metric.toPointMessage()).then(resolve).catch(reject);
+        const metric = new Metric(Measurements.PUBLISH_TIMES, <MetricFields>{ "duration": truncatedEndtimeInMs });
+        this.getMetricsCollector().write(metric.toPointMessage()).then(resolve).catch(reject);
       });
     });
   }

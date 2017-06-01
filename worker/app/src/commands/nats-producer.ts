@@ -14,6 +14,7 @@ export default async (env: any): Promise<void> => {
   // connecting the metrics-collector
   const metricsNatsClient = GetNatsClient(`${driverName}-metrics-collector`, env["METRICS_HOST"], Number(env["METRICS_PORT"]));
   const metricsCollector = new MetricsCollector(metricsNatsClient);
+  metricsCollector.disabled = true;
 
   // connectin the message-driver
   const messageDriver = await GetDriver(driverName, defaultAppName, env);
