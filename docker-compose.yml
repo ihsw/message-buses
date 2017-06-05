@@ -23,22 +23,6 @@ services:
     volumes:
     - ./telegraf-collector/app:/srv/app
 
-  kafka-zookeeper:
-    image: wurstmeister/zookeeper
-  kafka-server:
-    depends_on:
-    - kafka-zookeeper
-    image: wurstmeister/kafka
-    volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-    - KAFKA_ADVERTISED_HOST_NAME=192.168.99.100
-    - KAFKA_ZOOKEEPER_CONNECT=kafka-zookeeper:2181
-  kafka-producer:
-    build: ./kafka-producer
-  kafka-consumer:
-    build: ./kafka-consumer
-
   nats-server:
     build: ./nats-server
     ports:
