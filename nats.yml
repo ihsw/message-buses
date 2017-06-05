@@ -1,13 +1,6 @@
 version: '3'
 
 services:
-  # nats server
-  nats-server:
-    build: ./nats-server
-    ports:
-    - "4442:4442"
-    - "8222:8222"
-  
   # provides a top-like interface to visually monitoring nats
   nats-top:
     image: byrnedo/nats-top
