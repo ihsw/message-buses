@@ -22,7 +22,7 @@ export const GetNatsClient = (name: string, natsHost: string, natsPort: number):
 };
 
 export const GetDriver = (name: string, clusterId: string, env: any): Promise<NatsDriver> => {
-  return new Promise<NatsDriver>((resolve) => {
+  return new Promise<NatsDriver>((resolve, reject) => {
     // parsing env vars
     const natsHost = env["NATS_HOST"];
     const natsPort = Number(env["NATS_PORT"]);
@@ -32,7 +32,11 @@ export const GetDriver = (name: string, clusterId: string, env: any): Promise<Na
 
     // connecting to nss
     const nssClient = NSS.connect(clusterId, name, <NSS.StanOptions>{ nc: natsClient });
-    nssClient.on("connect", () => resolve(new NatsDriver(natsClient, nssClient)));
+    const tId = setTimeout(() => reject(new Error(`Could not connect to the nats-streaming-server at ${natsHost}:${natsPort}!`)), 5*1000);
+    nssClient.on("connect", () => {
+      clearTimeout(tId);
+      resolve(new NatsDriver(natsClient, nssClient));
+    });
   });
 };
 
