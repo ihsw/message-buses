@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  # rabbit server
+  rabbit-server:
+    image: rabbitmq:3-management
+    ports:
+    - "5672:5672"
+    - "15672:15672"
+    environment:
+    - RABBITMQ_DEFAULT_VHOST=ecp4
+
+  # worker-based apps
+  rabbit-producer:
+    build: ./worker
+    depends_on:
+    - rabbit-server
+    environment:
+    - RABBIT_HOST=rabbit-server
+    - RABBIT_PORT=5672
+    command:
+    - ./bin/run-app
+    - rabbit-producer
+    volumes:
+    - ./worker/app:/srv/app
