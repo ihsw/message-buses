@@ -21,7 +21,7 @@ export const GetNatsClient = (name: string, natsHost: string, natsPort: number):
   });
 };
 
-export const GetDriver = async (name: string, clusterId: string, env: any): Promise<NatsDriver> => {
+export const GetDriver = (name: string, clusterId: string, env: any): Promise<NatsDriver> => {
   return new Promise<NatsDriver>((resolve) => {
     // parsing env vars
     const natsHost = env["NATS_HOST"];
