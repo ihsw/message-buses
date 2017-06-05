@@ -1,14 +1,16 @@
-import * as process from "process";
-
 import * as amqplib from "amqplib";
 
 import AbstractMessageDriver from "./AbstractMessageDriver";
 import {
   IMessageDriver,
-  ISubscribeOptions,
-  ISubscribePersistOptions,
   IUnsubscribeCallback
 } from "./IMessageDriver";
+
+export const GetDriver = async (vhost: string, env: any): Promise<RabbitDriver> => {
+  return new RabbitDriver(await amqplib.connect(
+    `amqp://${env["RABBIT_HOST"]}:${env["RABBIT_PORT"]}/${vhost}`
+  ));
+};
 
 export class RabbitDriver extends AbstractMessageDriver implements IMessageDriver {
   rabbitClient: amqplib.Connection;
