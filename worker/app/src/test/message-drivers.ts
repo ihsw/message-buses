@@ -6,21 +6,42 @@ import {
   IMessageDriver,
   ISubscribeOptions,
   ISubscribePersistOptions
-} from "../../message-drivers/IMessageDriver";
-import { GetDriver, GetNatsClient } from "../../message-drivers/NatsDriver";
-import { MetricsCollector } from "../../lib/MetricsCollector";
-import { defaultAppName } from "../../lib/test-helper";
+} from "../message-drivers/IMessageDriver";
+import { GetDriver, GetNatsClient } from "../message-drivers/NatsDriver";
+import { MetricsCollector } from "../lib/MetricsCollector";
+import { defaultAppName } from "../lib/test-helper";
+
+interface IDriverHandler {
+    getDriver: (config: any) => Promise<IMessageDriver>;
+}
+
+interface IDriverHandlers {
+  [key: string]: IDriverHandler;
+}
+
+const driverHandlers = <IDriverHandlers>{
+  "nats": <IDriverHandler>{
+    "getDriver": (config: any) => GetDriver(config.name, config.clusterId, config.env)
+  }
+};
 
 let messageDriver: IMessageDriver;
-test.before(async () => {
-  const driverName = "nats-driver-test";
+test.before(async (t) => {
+  // resolving the driver config
+  const driverType = process.env["DRIVER_TYPE"];
+  t.truthy(driverType, "Env var DRIVER_TYPE must not be blank");
+  t.true(driverType in driverHandlers, "Invalid driver type");
+  const driverHandler = driverHandlers[driverType];
+
+  // misc
+  const driverName = "driver-test";
 
   // connecting to the metrics collector
   const metricsNatsClient = GetNatsClient(`${driverName}-metrics-collector`, process.env["METRICS_HOST"], Number(process.env["METRICS_PORT"]));
   const metricsCollector = new MetricsCollector(metricsNatsClient);
 
   // connecting the message-driver
-  messageDriver = await GetDriver(driverName, defaultAppName, process.env);
+  messageDriver = await driverHandler.getDriver({ name: driverName, clusterId: defaultAppName, env: process.env });
   messageDriver.metricsCollector = metricsCollector;
 });
 
