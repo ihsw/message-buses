@@ -2,7 +2,7 @@ import { ConnectionInfo } from "./interfaces";
 import { GetDriver, GetNatsClient } from "../message-drivers/NatsDriver";
 import { MetricsCollector } from "../lib/MetricsCollector";
 import getApp from "../lib/consumer-app";
-import { defaultAppName, getUniqueName } from "../lib/helper";
+import { getUniqueName } from "../lib/helper";
 
 export const ExpectedEnvVars: Array<string | ConnectionInfo> = [
   "APP_PORT",
@@ -21,7 +21,7 @@ export default async (env: any): Promise<void> => {
   metricsCollector.disabled = true;
 
   // connectin the message-driver
-  const messageDriver = await GetDriver(driverName, defaultAppName, env);
+  const messageDriver = await GetDriver(driverName, env);
   messageDriver.metricsCollector = metricsCollector;
 
   // generating an app

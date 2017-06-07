@@ -3,7 +3,6 @@ import { MetricsCollector } from "../lib/MetricsCollector";
 import { getFilenames, readFile } from "../lib/helper";
 import { GetDriver, GetNatsClient } from "../message-drivers/NatsDriver";
 import RfmManager from "../lib/rfm-manager";
-import { defaultAppName } from "../lib/helper";
 
 export const ExpectedEnvVars: Array<string | ConnectionInfo> = [
   new ConnectionInfo("NATS_HOST", "NATS_PORT"),
@@ -17,7 +16,7 @@ export default async (env: any, storeDir: string): Promise<void> => {
   const metricsCollector = new MetricsCollector(metricsNatsClient);
 
   // connectin the message-driver
-  const messageDriver = await GetDriver(driverName, defaultAppName, env);
+  const messageDriver = await GetDriver(driverName, env);
   messageDriver.metricsCollector = metricsCollector;
 
   // initializing the rfm manager

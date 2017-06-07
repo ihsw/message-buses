@@ -9,7 +9,6 @@ import { MetricsCollector } from "../lib/MetricsCollector";
 import RfmManager from "../lib/rfm-manager";
 import getApp from "../lib/consumer-app";
 import { getUniqueName, readFile } from "../lib/helper";
-import { defaultAppName } from "../lib/test-helper";
 
 let app: supertest.SuperTest<supertest.Test>;
 let rfmManager: RfmManager;
@@ -21,7 +20,7 @@ test.before(async () => {
   const metricsCollector = new MetricsCollector(metricsNatsClient);
 
   // connecting the message-driver
-  const messageDriver = await GetDriver(driverName, defaultAppName, process.env);
+  const messageDriver = await GetDriver(driverName, process.env);
   messageDriver.metricsCollector = metricsCollector;
 
   app = supertest(getApp(messageDriver, metricsCollector));

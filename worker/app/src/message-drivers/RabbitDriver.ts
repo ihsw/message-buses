@@ -2,11 +2,12 @@ import * as amqplib from "amqplib";
 
 import AbstractMessageDriver from "./AbstractMessageDriver";
 import {
+  IGetDriver,
   IMessageDriver,
   IUnsubscribeCallback
 } from "./IMessageDriver";
 
-export const GetDriver = async (vhost: string, env: any): Promise<RabbitDriver> => {
+export const GetDriver: IGetDriver = async (vhost: string, env: any): Promise<RabbitDriver> => {
   return new RabbitDriver(await amqplib.connect(
     `amqp://${env["RABBIT_HOST"]}:${env["RABBIT_PORT"]}/${vhost}`
   ));

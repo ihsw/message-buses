@@ -3,14 +3,13 @@ import * as zlib from "zlib";
 
 import { test } from "ava";
 
-import { ISubscribePersistOptions } from "../message-drivers/IMessageDriver";
-import { GetDriver, NatsDriver, GetNatsClient } from "../message-drivers/NatsDriver";
+import { IMessageDriver, ISubscribePersistOptions } from "../message-drivers/IMessageDriver";
+import { GetDriver, GetNatsClient } from "../message-drivers/NatsDriver";
 import { MetricsCollector } from "../lib/MetricsCollector";
 import { getUniqueName } from "../lib/helper";
-import { defaultAppName } from "../lib/test-helper";
 import run from "../lib/producer-app";
 
-let messageDriver: NatsDriver;
+let messageDriver: IMessageDriver;
 test.before(async () => {
   const driverName = "nats-producer-app-test";
 
@@ -19,7 +18,7 @@ test.before(async () => {
   const metricsCollector = new MetricsCollector(metricsNatsClient);
 
   // connecting the message-driver
-  messageDriver = await GetDriver(driverName, defaultAppName, process.env);
+  messageDriver = await GetDriver(driverName, process.env);
   messageDriver.metricsCollector = metricsCollector;
 
   // starting up the queues

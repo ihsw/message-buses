@@ -28,6 +28,10 @@ export interface IUnsubscribeCallback {
   (): void;
 }
 
+export interface IGetDriver {
+  (name: string, env: any): Promise<IMessageDriver>;
+}
+
 export interface IMessageDriver {
   metricsCollector: MetricsCollector;
 

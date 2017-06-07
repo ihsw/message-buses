@@ -3,7 +3,6 @@ import { test } from "ava";
 import { GetDriver, GetNatsClient } from "../message-drivers/NatsDriver";
 import { MetricsCollector } from "../lib/MetricsCollector";
 import RfmManager from "../lib/rfm-manager";
-import { defaultAppName } from "../lib/test-helper";
 
 let rfmManager: RfmManager;
 test.before(async () => {
@@ -14,7 +13,7 @@ test.before(async () => {
   const metricsCollector = new MetricsCollector(metricsNatsClient);
 
   // connecting the message-driver
-  const messageDriver = await GetDriver(driverName, defaultAppName, process.env);
+  const messageDriver = await GetDriver(driverName, process.env);
   messageDriver.metricsCollector = metricsCollector;
 
   // instantiating the rfm manager

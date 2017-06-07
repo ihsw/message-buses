@@ -3,16 +3,16 @@ import * as process from "process";
 import { test } from "ava";
 
 import {
+  IGetDriver,
   IMessageDriver,
   ISubscribeOptions,
   ISubscribePersistOptions
 } from "../message-drivers/IMessageDriver";
 import { GetDriver, GetNatsClient } from "../message-drivers/NatsDriver";
 import { MetricsCollector } from "../lib/MetricsCollector";
-import { defaultAppName } from "../lib/test-helper";
 
 interface IDriverHandler {
-    getDriver: (config: any) => Promise<IMessageDriver>;
+    getDriver: IGetDriver;
 }
 
 interface IDriverHandlers {
@@ -21,7 +21,7 @@ interface IDriverHandlers {
 
 const driverHandlers = <IDriverHandlers>{
   "nats": <IDriverHandler>{
-    "getDriver": (config: any) => GetDriver(config.name, config.clusterId, config.env)
+    "getDriver": GetDriver
   }
 };
 
@@ -41,7 +41,7 @@ test.before(async (t) => {
   const metricsCollector = new MetricsCollector(metricsNatsClient);
 
   // connecting the message-driver
-  messageDriver = await driverHandler.getDriver({ name: driverName, clusterId: defaultAppName, env: process.env });
+  messageDriver = await driverHandler.getDriver(driverName, process.env);
   messageDriver.metricsCollector = metricsCollector;
 });
 
