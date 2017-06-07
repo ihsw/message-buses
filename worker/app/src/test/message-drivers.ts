@@ -8,21 +8,18 @@ import {
   ISubscribeOptions,
   ISubscribePersistOptions
 } from "../message-drivers/IMessageDriver";
-import { GetDriver, GetNatsClient } from "../message-drivers/NatsDriver";
+import { GetDriver as GetNatsDriver, GetNatsClient } from "../message-drivers/NatsDriver";
+import { GetDriver as GetRabbitDriver } from "../message-drivers/RabbitDriver";
 import { MetricsCollector } from "../lib/MetricsCollector";
-
-interface IDriverHandler {
-    getDriver: IGetDriver;
-}
+import { defaultAppName } from "../lib/helper";
 
 interface IDriverHandlers {
-  [key: string]: IDriverHandler;
+  [key: string]: IGetDriver;
 }
 
 const driverHandlers = <IDriverHandlers>{
-  "nats": <IDriverHandler>{
-    "getDriver": GetDriver
-  }
+  "nats": GetNatsDriver,
+  "rabbit": GetRabbitDriver
 };
 
 let messageDriver: IMessageDriver;
@@ -31,17 +28,17 @@ test.before(async (t) => {
   const driverType = process.env["DRIVER_TYPE"];
   t.truthy(driverType, "Env var DRIVER_TYPE must not be blank");
   t.true(driverType in driverHandlers, "Invalid driver type");
-  const driverHandler = driverHandlers[driverType];
+  const getDriver = driverHandlers[driverType];
 
   // misc
-  const driverName = "driver-test";
+  const driverName = defaultAppName;
 
   // connecting to the metrics collector
   const metricsNatsClient = GetNatsClient(`${driverName}-metrics-collector`, process.env["METRICS_HOST"], Number(process.env["METRICS_PORT"]));
   const metricsCollector = new MetricsCollector(metricsNatsClient);
 
   // connecting the message-driver
-  messageDriver = await driverHandler.getDriver(driverName, process.env);
+  messageDriver = await getDriver(driverName, process.env);
   messageDriver.metricsCollector = metricsCollector;
 });
 
@@ -56,16 +53,22 @@ test("Driver should subscribe", async (t) => {
     const queue = "subscribe-test";
     const msg = "Hello, world!";
 
+    const tId = setTimeout(() => reject(new Error("Test timed out!")), 5*1000);
+
     // setting up a subscribe handler
     messageDriver.subscribe(<ISubscribeOptions>{
       queue: queue,
       callback: (receivedMsg) => {
+        clearTimeout(tId);
         t.is(receivedMsg, msg, "Message from subscription matches published message");
 
         resolve();
       },
       timeoutInMs: 2 * 1000,
-      timeoutCallback: (sId) => reject(new Error(`Subscription ${sId} timed out!`))
+      timeoutCallback: (sId) => {
+        clearTimeout(tId);
+        reject(new Error(`Subscription ${sId} timed out!`));
+      }
     });
 
     // publishing out a message
@@ -134,15 +137,19 @@ test("Driver should timeout on non-existent subscription", async (t) => {
   return new Promise<void>((resolve, reject) => {
     const queue = "non-existent-subscribe-test";
 
+    const tId = setTimeout(() => reject(new Error("Test timed out!")), 5*1000);
+
     // setting up a subscribe handler
     const unsubscribe = messageDriver.subscribe(<ISubscribeOptions>{
       queue: queue,
       callback: () => {
+        clearTimeout(tId);
         unsubscribe();
         reject(new Error("Subscription called callback when it should have failed!"));
       },
       timeoutInMs: 2 * 1000,
       timeoutCallback: () => {
+        clearTimeout(tId);
         unsubscribe();
         t.pass();
         resolve();
@@ -170,10 +177,13 @@ test("Driver should subscribe persist", async (t) => {
     const queue = "subscribe-persist-test";
     const msg = "Hello, world!";
 
+    const tId = setTimeout(() => reject(new Error("Test timed out!")), 5*1000);
+
     // setting up a subscribe handler
     const unsubscribe = messageDriver.subscribePersist(<ISubscribePersistOptions>{
       queue: queue,
       callback: (receivedMsg) => {
+        clearTimeout(tId);
         unsubscribe();
         t.is(receivedMsg, msg, "Message from subscription matches published message");
 
@@ -181,6 +191,7 @@ test("Driver should subscribe persist", async (t) => {
       },
       timeoutInMs: 2 * 1000,
       timeoutCallback: () => {
+        clearTimeout(tId);
         unsubscribe();
         reject(new Error("Subscription timed out!"));
       }
@@ -195,15 +206,19 @@ test("Driver should timeout on non-existent persistent subscription", async (t) 
   return new Promise<void>((resolve, reject) => {
     const queue = "non-existent-subscribe-persist-test";
 
+    const tId = setTimeout(() => reject(new Error("Test timed out!")), 5*1000);
+
     // setting up a subscribe handler
     const unsubscribe = messageDriver.subscribePersist(<ISubscribePersistOptions>{
       queue: queue,
       callback: () => {
+        clearTimeout(tId);
         unsubscribe();
         reject(new Error("Subscription against non-existent persistent queue called callback!"));
       },
       timeoutInMs: 2 * 1000,
       timeoutCallback: () => {
+        clearTimeout(tId);
         unsubscribe();
         t.pass();
         resolve();
