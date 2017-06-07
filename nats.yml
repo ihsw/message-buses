@@ -69,6 +69,8 @@ services:
     command:
     - ./bin/run-app
     - nats-benchmarker
+    - -d 2m
+    - -w 200
     volumes:
     - ./worker/app:/srv/app
   
