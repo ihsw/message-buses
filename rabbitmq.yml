@@ -14,8 +14,12 @@ services:
   rabbit-producer:
     build: ./worker
     depends_on:
+    - nats-server # for metrics collection
+    - influxdb-buffer
     - rabbit-server
     environment:
+    - METRICS_HOST=nats-server
+    - METRICS_PORT=4222
     - RABBIT_HOST=rabbit-server
     - RABBIT_PORT=5672
     command:
