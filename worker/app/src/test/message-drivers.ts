@@ -48,7 +48,7 @@ test("Driver should publish", async (t) => {
   return messageDriver.publish("publish-test", "Hello, world!");
 });
 
-test.only("Driver should subscribe", async (t) => {
+test("Driver should subscribe", async (t) => {
   return new Promise<void>((resolve, reject) => {
     const queue = "subscribe-test";
     const msg = "Hello, world!";
@@ -133,7 +133,7 @@ test("Driver should support queue grouping", async (t) => {
   });
 });
 
-test("Driver should timeout on non-existent subscription", async (t) => {
+test.only("Driver should timeout on non-existent subscription", async (t) => {
   return new Promise<void>((resolve, reject) => {
     const queue = "non-existent-subscribe-test";
 

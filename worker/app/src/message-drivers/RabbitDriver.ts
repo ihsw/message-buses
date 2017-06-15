@@ -27,7 +27,18 @@ export class RabbitDriver extends AbstractMessageDriver implements IMessageDrive
     this.rabbitClient.createChannel()
       .then((channel) => {
         channel.assertQueue(opts.queue);
+        let tId;
+        if (opts.timeoutInMs) {
+          const timeoutCallback = opts.timeoutCallback ? opts.timeoutCallback : () => { return; };
+          tId = setTimeout(timeoutCallback, opts.timeoutInMs);
+        }
+
         channel.consume(opts.queue, (msg) => {
+          if (tId) {
+            clearTimeout(tId);
+            tId = null;
+          }
+
           opts.callback(msg.content.toString());
           channel.ack(msg);
         });
