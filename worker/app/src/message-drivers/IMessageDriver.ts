@@ -25,7 +25,7 @@ export interface ISubscribeTimeoutCallback {
 }
 
 export interface IUnsubscribeCallback {
-  (): void;
+  (): Promise<void>;
 }
 
 export interface IGetDriver {
@@ -35,7 +35,7 @@ export interface IGetDriver {
 export interface IMessageDriver {
   metricsCollector: MetricsCollector;
 
-  subscribe(opts: ISubscribeOptions): IUnsubscribeCallback;
+  subscribe(opts: ISubscribeOptions): Promise<IUnsubscribeCallback>;
   publish(queue: string, message: string): Promise<void>;
 
   subscribePersist(opts: ISubscribePersistOptions): IUnsubscribeCallback;

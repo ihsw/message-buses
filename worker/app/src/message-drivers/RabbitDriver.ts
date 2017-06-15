@@ -23,28 +23,40 @@ export class RabbitDriver extends AbstractMessageDriver implements IMessageDrive
     this.rabbitClient = rabbitClient;
   }
 
-  subscribe(opts: ISubscribeOptions): IUnsubscribeCallback {
-    this.rabbitClient.createChannel()
-      .then((channel) => {
-        channel.assertQueue(opts.queue);
-        let tId;
-        if (opts.timeoutInMs) {
-          const timeoutCallback = opts.timeoutCallback ? opts.timeoutCallback : () => { return; };
-          tId = setTimeout(timeoutCallback, opts.timeoutInMs);
-        }
+  async subscribe(opts: ISubscribeOptions): Promise<IUnsubscribeCallback> {
+    const channel = await this.rabbitClient.createChannel();
 
-        channel.consume(opts.queue, (msg) => {
-          if (tId) {
-            clearTimeout(tId);
-            tId = null;
-          }
+    // asserting that the queue exists
+    channel.assertQueue(opts.queue);
 
-          opts.callback(msg.content.toString());
-          channel.ack(msg);
-        });
-      });
-    
-    return () => { return; };
+    // optionally setting up a timeout callback
+    let tId;
+    if (opts.timeoutInMs) {
+      const timeoutCallback = opts.timeoutCallback ? opts.timeoutCallback : () => { return; };
+      tId = setTimeout(timeoutCallback, opts.timeoutInMs);
+    }
+
+    // waiting for messages to come in
+    channel.consume(opts.queue, (msg) => {
+      // halting on null message, where the channel has been closed
+      if (msg === null) {
+        return;
+      }
+
+      // optionally clearing the timeout callback
+      if (tId) {
+        clearTimeout(tId);
+        tId = null;
+      }
+
+      // calling the receipt callback and acking the message
+      opts.callback(msg.content.toString());
+      channel.ack(msg);
+    });
+
+    return new Promise<IUnsubscribeCallback>(
+      (resolve) => channel.deleteQueue(opts.queue).then(() => resolve())
+    );
   }
 
   async publish(queue: string, message: string): Promise<void> {
@@ -54,11 +66,11 @@ export class RabbitDriver extends AbstractMessageDriver implements IMessageDrive
   }
 
   subscribePersist(): IUnsubscribeCallback {
-    return () => { return };
+    return () => Promise.resolve();
   }
 
   subscribePersistFromBeginning(): IUnsubscribeCallback {
-    return () => { return; };
+    return () => Promise.resolve();
   }
 
   publishPersist(): Promise<string> {

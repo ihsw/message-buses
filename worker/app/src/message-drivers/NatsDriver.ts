@@ -54,7 +54,7 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
     this.nssClient = nssClient;
   }
 
-  subscribe(opts: ISubscribeOptions): IUnsubscribeCallback {
+  subscribe(opts: ISubscribeOptions): Promise<IUnsubscribeCallback> {
     let sId;
     if (!opts.parallel) {
       sId = this.natsClient.subscribe(opts.queue, (msg) => opts.callback(msg));
@@ -67,7 +67,9 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
       this.natsClient.timeout(sId, opts.timeoutInMs, 0, cb);
     }
 
-    return () => this.natsClient.unsubscribe(sId);
+    return new Promise<IUnsubscribeCallback>(
+      () => Promise.resolve(this.natsClient.unsubscribe(sId))
+    );
   }
 
   private subscribePersistWithOptions(opts: ISubscribeOptions, subscribeOpts: NSS.SubscriptionOptions): IUnsubscribeCallback {
@@ -95,7 +97,10 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
       opts.callback(result);
     });
 
-    return () => subscription.unsubscribe();
+    return () => new Promise<void>((resolve) => {
+      subscription.unsubscribe();
+      resolve();
+    });
   }
 
   subscribePersist(opts: ISubscribePersistOptions): IUnsubscribeCallback {

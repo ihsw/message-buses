@@ -20,7 +20,7 @@ const queueTimeout = 10 * 1000;
 
 // subscribe response handler with timeouts
 interface ISubscribeHandlerCallback {
-  (tId: NodeJS.Timer, unsubscribe: IUnsubscribeCallback, msg: string);
+  (tId: NodeJS.Timer, unsubscribeResult: Promise<IUnsubscribeCallback>, msg: string);
 }
 interface ISubscribeHandlerOptions {
   messageDriver: IMessageDriver;
@@ -38,9 +38,9 @@ const subscribeHandler = (opts: ISubscribeHandlerOptions) => {
     opts.res.status(HttpStatus.INTERNAL_SERVER_ERROR).send("Request timeout!");
   }, queueTimeout * 2);
 
-  const unsubscribe = opts.messageDriver.subscribe(<ISubscribePersistOptions>{
+  const unsubscribeResult = opts.messageDriver.subscribe(<ISubscribePersistOptions>{
     queue: opts.queue,
-    callback: (msg) => opts.callback(tId, unsubscribe, msg),
+    callback: (msg) => opts.callback(tId, unsubscribeResult, msg),
     timeoutInMs: queueTimeout,
     timeoutCallback: () => {
       clearTimeout(tId);
@@ -129,10 +129,11 @@ export default (messageDriver: IMessageDriver, metricsCollector: MetricsCollecto
       req: req,
       res: res,
       queue: queue,
-      callback: (tId, unsubscribe, msg) => {
-        clearTimeout(tId);
-        unsubscribe();
-        res.send(msg);
+      callback: (tId, unsubscribeResult, msg) => {
+        unsubscribeResult.then((unsubscribe) => unsubscribe).then(() => {
+          clearTimeout(tId);
+          res.send(msg);
+        });
       }
     });
 
@@ -162,16 +163,17 @@ export default (messageDriver: IMessageDriver, metricsCollector: MetricsCollecto
       req: req,
       res: res,
       queue: queue,
-      callback: (tId: NodeJS.Timer, unsubscribe: IUnsubscribeCallback, msg: string) => {
+      callback: (tId, unsubscribeResult, msg) => {
         messageCount += 1;
         const isFinished = messageCount === count;
 
         res.write(`${msg}\n`);
 
         if (isFinished) {
-          unsubscribe();
-          clearTimeout(tId);
-          res.end();
+          unsubscribeResult.then((unsubscribe) => unsubscribe).then(() => {
+            clearTimeout(tId);
+            res.end();
+          });
         }
       }
     });
@@ -222,29 +224,30 @@ export default (messageDriver: IMessageDriver, metricsCollector: MetricsCollecto
       req: req,
       res: res,
       queue: queue,
-      callback: (tId, unsubscribe, msg) => {
-        unsubscribe();
+      callback: (tId, unsubscribeResult, msg) => {
         clearTimeout(tId);
 
-        const msgBuf = Buffer.from(msg, "base64");
+        unsubscribeResult.then((unsubscribe) => unsubscribe).then(() => {
+          const msgBuf = Buffer.from(msg, "base64");
 
-        // optionally sending the gzipped message
-        if (acceptsGzip) {
-          res.setHeader("content-encoding", "gzip");
-          res.send(msgBuf);
-
-          return;
-        }
-
-        // gunzipping the message
-        zlib.gunzip(msgBuf, (err, buf) => {
-          if (err) {
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err.message);
+          // optionally sending the gzipped message
+          if (acceptsGzip) {
+            res.setHeader("content-encoding", "gzip");
+            res.send(msgBuf);
 
             return;
           }
 
-          res.send(buf);
+          // gunzipping the message
+          zlib.gunzip(msgBuf, (err, buf) => {
+            if (err) {
+              res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err.message);
+
+              return;
+            }
+
+            res.send(buf);
+          });
         });
       }
     });

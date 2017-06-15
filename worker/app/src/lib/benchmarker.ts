@@ -16,7 +16,7 @@ export const waitingRequest = (messageDriver: IMessageDriver): Promise<void> => 
 
     // subscribing to that unique response queue
     let messageCount = 0;
-    const unsubscribe = messageDriver.subscribe(<ISubscribeOptions>{
+    const unsubscribeResult = messageDriver.subscribe(<ISubscribeOptions>{
       queue: responseQueue,
       parallel: true,
       callback: () => {
@@ -24,15 +24,16 @@ export const waitingRequest = (messageDriver: IMessageDriver): Promise<void> => 
         const isFinished = messageCount === expectedResponseMessages;
 
         if (isFinished) {
-          unsubscribe();
-          resolve();
+          unsubscribeResult
+            .then((unsubscribe) => unsubscribe)
+            .then(() => resolve());
         }
       },
       timeoutInMs: 5*1000,
       timeoutCallback: () => {
-        unsubscribe();
-
-        reject(new Error("Timed out!"));
+        unsubscribeResult
+          .then((unsubscribe) => unsubscribe)
+          .then(() => reject(new Error("Timed out!")));
       }
     });
 
@@ -47,18 +48,19 @@ export const request = (messageDriver: IMessageDriver): Promise<void> => {
     const responseQueue = getUniqueName("hello-world");
 
     // subscribing to that unique response queue
-    const unsubscribe = messageDriver.subscribe(<ISubscribeOptions>{
+    const unsubscribeResult = messageDriver.subscribe(<ISubscribeOptions>{
       queue: responseQueue,
       parallel: true,
       callback: () => {
-        unsubscribe();
-        resolve();
+        unsubscribeResult
+          .then((unsubscribe) => unsubscribe)
+          .then(() => resolve());
       },
       timeoutInMs: 5*1000,
       timeoutCallback: () => {
-        unsubscribe();
-
-        reject(new Error("Timed out!"));
+        unsubscribeResult
+          .then((unsubscribe) => unsubscribe)
+          .then(() => reject(new Error("Timed out!")));
       }
     });
 

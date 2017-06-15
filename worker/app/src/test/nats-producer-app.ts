@@ -30,17 +30,19 @@ test("Producer app should respond on queues queue", async (t) => {
   const queue = getUniqueName("queues-test");
 
   return new Promise<void>((resolve, reject) => {
-    const unsubscribe = messageDriver.subscribe(<ISubscribePersistOptions>{
+    const unsubscribeResult = messageDriver.subscribe(<ISubscribePersistOptions>{
       queue: queue,
       callback: (msg) => {
-        t.is(msg, "Pong");
-        unsubscribe();
-        resolve();
+        unsubscribeResult.then((unsubscribe) => unsubscribe).then(() => {
+          t.is(msg, "Pong");
+          resolve();
+        });
       },
       timeoutInMs: 2 * 1000,
       timeoutCallback: () => {
-        unsubscribe();
-        reject(new Error(`Queues subscription timed out!`));
+        unsubscribeResult
+          .then((unsubscribe) => unsubscribe)
+          .then(() => reject(new Error(`Queues subscription timed out!`)));
       }
     });
 
@@ -56,7 +58,7 @@ test("Producer app should respond on queueWaiting queue", async (t) => {
     const count = 10;
 
     let messageCount = 0;
-    const unsubscribe = messageDriver.subscribe(<ISubscribePersistOptions>{
+    const unsubscribeResult = messageDriver.subscribe(<ISubscribePersistOptions>{
       queue: queue,
       callback: (msg) => {
         t.is(msg, `Pong #${messageCount}`);
@@ -65,14 +67,16 @@ test("Producer app should respond on queueWaiting queue", async (t) => {
         const isFinished = messageCount === count;
 
         if (isFinished) {
-          unsubscribe();
-          resolve();
+          unsubscribeResult
+            .then((unsubscribe) => unsubscribe)
+            .then(() => resolve());
         }
       },
       timeoutInMs: 2 * 1000,
       timeoutCallback: () => {
-        unsubscribe();
-        reject(new Error(`Queues subscription timed out!`));
+        unsubscribeResult
+          .then((unsubscribe) => unsubscribe)
+          .then(() => reject(new Error(`Queues subscription timed out!`)));
       }
     });
 
@@ -91,23 +95,26 @@ test("Producer app should respond on queueBloating queue", async (t) => {
     const length = 1;
 
     const expectedResponse = "0".repeat(length * 1000);
-    const unsubscribe = messageDriver.subscribe(<ISubscribePersistOptions>{
+    const unsubscribeResult = messageDriver.subscribe(<ISubscribePersistOptions>{
       queue: queue,
       callback: (msg) => {
-        const msgBuf = Buffer.from(msg, "base64");
-        zlib.gunzip(msgBuf, (err, buf) => {
-          if (err) {
-            return reject(err);
-          }
+        unsubscribeResult.then((unsubscribe) => unsubscribe).then(() => {
+          const msgBuf = Buffer.from(msg, "base64");
+          zlib.gunzip(msgBuf, (err, buf) => {
+            if (err) {
+              return reject(err);
+            }
 
-          t.is(buf.toString(), expectedResponse, "Bloated queue should respond with appropriate bloated message");
-          resolve();
+            t.is(buf.toString(), expectedResponse, "Bloated queue should respond with appropriate bloated message");
+            resolve();
+          });
         });
       },
       timeoutInMs: 2 * 1000,
       timeoutCallback: () => {
-        unsubscribe();
-        reject(new Error(`Queues subscription timed out!`));
+        unsubscribeResult
+          .then((unsubscribe) => unsubscribe)
+          .then(() => reject(new Error(`Queues subscription timed out!`)));
       }
     });
 
