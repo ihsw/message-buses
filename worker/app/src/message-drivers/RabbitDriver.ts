@@ -4,7 +4,8 @@ import AbstractMessageDriver from "./AbstractMessageDriver";
 import {
   IGetDriver,
   IMessageDriver,
-  IUnsubscribeCallback
+  IUnsubscribeCallback,
+  ISubscribeOptions
 } from "./IMessageDriver";
 
 export const GetDriver: IGetDriver = async (vhost: string, env: any): Promise<RabbitDriver> => {
@@ -22,12 +23,23 @@ export class RabbitDriver extends AbstractMessageDriver implements IMessageDrive
     this.rabbitClient = rabbitClient;
   }
 
-  subscribe(): IUnsubscribeCallback {
-    return () => { return };
+  subscribe(opts: ISubscribeOptions): IUnsubscribeCallback {
+    this.rabbitClient.createChannel()
+      .then((channel) => {
+        channel.assertQueue(opts.queue);
+        channel.consume(opts.queue, (msg) => {
+          opts.callback(msg.content.toString());
+          channel.ack(msg);
+        });
+      });
+    
+    return () => { return; };
   }
 
-  publish(): Promise<void> {
-    return Promise.resolve();
+  async publish(queue: string, message: string): Promise<void> {
+    const channel = await this.rabbitClient.createChannel();
+    await channel.assertQueue(queue);
+    channel.sendToQueue(queue, Buffer.from(message));
   }
 
   subscribePersist(): IUnsubscribeCallback {
