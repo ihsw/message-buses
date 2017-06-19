@@ -4,16 +4,17 @@ import { test } from "ava";
 import * as supertest from "supertest";
 import * as HttpStatus from "http-status";
 
-import { GetDriver, GetNatsClient } from "../message-drivers/NatsDriver";
+import { GetDriver } from "../message-drivers";
+import { GetNatsClient } from "../message-drivers/NatsDriver";
 import { MetricsCollector } from "../lib/MetricsCollector";
 import RfmManager from "../lib/rfm-manager";
 import getApp from "../lib/consumer-app";
-import { getUniqueName, readFile } from "../lib/helper";
+import { getUniqueName, readFile, defaultAppName } from "../lib/helper";
 
 let app: supertest.SuperTest<supertest.Test>;
 let rfmManager: RfmManager;
 test.before(async () => {
-  const driverName = "nats-consumer-app";
+  const driverName = defaultAppName;
 
   // connecting to the metrics collector
   const metricsNatsClient = GetNatsClient(`${driverName}-metrics-collector`, process.env["METRICS_HOST"], Number(process.env["METRICS_PORT"]));
