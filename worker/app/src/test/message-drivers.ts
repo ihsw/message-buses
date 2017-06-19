@@ -2,33 +2,23 @@ import * as process from "process";
 
 import { test } from "ava";
 
+import { DriverHandlers } from "../message-drivers";
 import {
-  IGetDriver,
   IMessageDriver,
   ISubscribeOptions,
   ISubscribePersistOptions
 } from "../message-drivers/IMessageDriver";
-import { GetDriver as GetNatsDriver, GetNatsClient } from "../message-drivers/NatsDriver";
-import { GetDriver as GetRabbitDriver } from "../message-drivers/RabbitDriver";
+import { GetNatsClient } from "../message-drivers/NatsDriver";
 import { MetricsCollector } from "../lib/MetricsCollector";
 import { defaultAppName } from "../lib/helper";
-
-interface IDriverHandlers {
-  [key: string]: IGetDriver;
-}
-
-const driverHandlers = <IDriverHandlers>{
-  "nats": GetNatsDriver,
-  "rabbit": GetRabbitDriver
-};
 
 let messageDriver: IMessageDriver;
 test.before(async (t) => {
   // resolving the driver config
   const driverType = process.env["DRIVER_TYPE"];
   t.truthy(driverType, "Env var DRIVER_TYPE must not be blank");
-  t.true(driverType in driverHandlers, "Invalid driver type");
-  const getDriver = driverHandlers[driverType];
+  t.true(driverType in DriverHandlers, "Invalid driver type");
+  const getDriver = DriverHandlers[driverType];
 
   // misc
   const driverName = defaultAppName;
