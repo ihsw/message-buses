@@ -72,7 +72,7 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
     });
   }
 
-  private subscribePersistWithOptions(opts: ISubscribeOptions, subscribeOpts: NSS.SubscriptionOptions): IUnsubscribeOptions {
+  private subscribePersistWithOptions(opts: ISubscribeOptions, subscribeOpts: NSS.SubscriptionOptions): Promise<IUnsubscribeOptions> {
     const subscription = this.nssClient.subscribe(opts.queue, `${opts.queue}.workers`, subscribeOpts);
 
     let tId;
@@ -97,17 +97,17 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
       opts.callback(result);
     });
 
-    return <IUnsubscribeOptions>{ unsubscribe: () => Promise.resolve(subscription.unsubscribe()) };
+    return Promise.resolve(<IUnsubscribeOptions>{ unsubscribe: () => Promise.resolve(subscription.unsubscribe()) });
   }
 
-  subscribePersist(opts: ISubscribePersistOptions): IUnsubscribeOptions {
+  subscribePersist(opts: ISubscribePersistOptions): Promise<IUnsubscribeOptions> {
     return this.subscribePersistWithOptions(
       opts,
       this.nssClient.subscriptionOptions()
     );
   }
 
-  subscribePersistFromBeginning(opts: ISubscribePersistOptions): IUnsubscribeOptions {
+  subscribePersistFromBeginning(opts: ISubscribePersistOptions): Promise<IUnsubscribeOptions> {
     const subscriptionOpts = this.nssClient.subscriptionOptions();
     subscriptionOpts.setStartAtSequence(0);
     return this.subscribePersistWithOptions(opts, subscriptionOpts);

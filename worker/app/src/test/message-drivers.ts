@@ -187,16 +187,19 @@ test("Driver should subscribe persist", async (t) => {
       queue: queue,
       callback: (receivedMsg) => {
         clearTimeout(tId);
-        unsubscribeResult.unsubscribe();
-        t.is(receivedMsg, msg, "Message from subscription matches published message");
+        unsubscribeResult.then((unsubscribeSettings) => unsubscribeSettings.unsubscribe).then(() => {
+          t.is(receivedMsg, msg, "Message from subscription matches published message");
 
-        resolve();
+          resolve();
+        });
       },
       timeoutInMs: 2 * 1000,
       timeoutCallback: () => {
         clearTimeout(tId);
-        unsubscribeResult.unsubscribe();
-        reject(new Error("Subscription timed out!"));
+
+        unsubscribeResult
+          .then((unsubscribeSettings) => unsubscribeSettings.unsubscribe)
+          .then(() => reject(new Error("Subscription timed out!")));
       }
     });
 
@@ -216,15 +219,18 @@ test("Driver should timeout on non-existent persistent subscription", async (t) 
       queue: queue,
       callback: () => {
         clearTimeout(tId);
-        unsubscribeResult.unsubscribe();
-        reject(new Error("Subscription against non-existent persistent queue called callback!"));
+
+        unsubscribeResult
+          .then((unsubscribeSettings) => unsubscribeSettings.unsubscribe)
+          .then(() => reject(new Error("Subscription against non-existent persistent queue called callback!")));
       },
       timeoutInMs: 2 * 1000,
       timeoutCallback: () => {
         clearTimeout(tId);
-        unsubscribeResult.unsubscribe();
-        t.pass();
-        resolve();
+        unsubscribeResult.then((unsubscribeSettings) => unsubscribeSettings.unsubscribe).then(() => {
+          t.pass();
+          resolve();
+        });
       }
     });
   });

@@ -38,8 +38,8 @@ export interface IMessageDriver {
   subscribe(opts: ISubscribeOptions): Promise<IUnsubscribeOptions>;
   publish(queue: string, message: string): Promise<void>;
 
-  subscribePersist(opts: ISubscribePersistOptions): IUnsubscribeOptions;
-  subscribePersistFromBeginning(opts: ISubscribePersistOptions): IUnsubscribeOptions;
+  subscribePersist(opts: ISubscribePersistOptions): Promise<IUnsubscribeOptions>;
+  subscribePersistFromBeginning(opts: ISubscribePersistOptions): Promise<IUnsubscribeOptions>;
   publishPersist(queue: string, message: string): Promise<string>;
   lastPersistMessage(queue: string): Promise<string>;
 }

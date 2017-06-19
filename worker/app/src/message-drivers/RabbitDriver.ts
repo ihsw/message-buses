@@ -67,12 +67,12 @@ export class RabbitDriver extends AbstractMessageDriver implements IMessageDrive
     channel.sendToQueue(queue, Buffer.from(message));
   }
 
-  subscribePersist(): IUnsubscribeOptions {
-    return <IUnsubscribeOptions>{ unsubscribe: () => Promise.resolve() };
+  subscribePersist(): Promise<IUnsubscribeOptions> {
+    return Promise.resolve(<IUnsubscribeOptions>{ unsubscribe: () => Promise.resolve() });
   }
 
-  subscribePersistFromBeginning(): IUnsubscribeOptions {
-    return <IUnsubscribeOptions>{ unsubscribe: () => Promise.resolve() };
+  subscribePersistFromBeginning(): Promise<IUnsubscribeOptions> {
+    return Promise.resolve(<IUnsubscribeOptions>{ unsubscribe: () => Promise.resolve() });
   }
 
   publishPersist(): Promise<string> {
