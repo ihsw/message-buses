@@ -101,13 +101,6 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
   }
 
   subscribePersist(opts: ISubscribePersistOptions): Promise<IUnsubscribeOptions> {
-    return this.subscribePersistWithOptions(
-      opts,
-      this.nssClient.subscriptionOptions()
-    );
-  }
-
-  subscribePersistFromBeginning(opts: ISubscribePersistOptions): Promise<IUnsubscribeOptions> {
     const subscriptionOpts = this.nssClient.subscriptionOptions();
     subscriptionOpts.setStartAtSequence(0);
     return this.subscribePersistWithOptions(opts, subscriptionOpts);
@@ -127,31 +120,24 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
     });
   }
 
-  publishPersist(queue: string, message: string): Promise<string> {
-    return new Promise<string>((resolve) => {
-      const guid = this.nssClient.publish(queue, message);
-      resolve(guid);
+  publishPersist(queue: string, message: string): Promise<void> {
+    return new Promise<void>((resolve) => {
+      this.nssClient.publish(queue, message);
+      resolve();
     });
   }
 
-  lastPersistMessage(queue: string): Promise<string> {
+  async lastPersistMessage(queue: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-      const opts = this.nssClient.subscriptionOptions().setStartWithLastReceived();
-      const subscription = this.nssClient.subscribe(queue, `${queue}.workers`, opts);
-      const tId = setTimeout(() => reject(new Error("Subscription timeout!")), 2 * 1000);
-      subscription.on("message", (msg: NSS.Message) => {
-        clearTimeout(tId);
-        subscription.unsubscribe();
-
-        // resolving the message data
-        let result: string;
-        if (msg.getData() instanceof Buffer) {
-          result = msg.getData().toString();
-        } else {
-          result = <string>msg.getData();
-        }
-
-        resolve(result);
+      const unsubscribeResult = this.subscribePersist(<ISubscribePersistOptions>{
+        queue: queue,
+        callback: (msg) => {
+          unsubscribeResult
+            .then((unsubscribeSettings) => unsubscribeSettings.unsubscribe)
+            .then(() => resolve(msg));
+        },
+        timeoutInMs: 5 * 1000,
+        timeoutCallback: () => reject(new Error("Fetching last persist message timed out!"))
       });
     });
   }

@@ -39,7 +39,6 @@ export interface IMessageDriver {
   publish(queue: string, message: string): Promise<void>;
 
   subscribePersist(opts: ISubscribePersistOptions): Promise<IUnsubscribeOptions>;
-  subscribePersistFromBeginning(opts: ISubscribePersistOptions): Promise<IUnsubscribeOptions>;
-  publishPersist(queue: string, message: string): Promise<string>;
+  publishPersist(queue: string, message: string): Promise<void>;
   lastPersistMessage(queue: string): Promise<string>;
 }

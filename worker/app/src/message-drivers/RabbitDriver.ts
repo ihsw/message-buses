@@ -5,7 +5,8 @@ import {
   IGetDriver,
   IMessageDriver,
   IUnsubscribeOptions,
-  ISubscribeOptions
+  ISubscribeOptions,
+  ISubscribePersistOptions
 } from "./IMessageDriver";
 
 export const GetDriver: IGetDriver = async (vhost: string, env: any): Promise<RabbitDriver> => {
@@ -67,19 +68,28 @@ export class RabbitDriver extends AbstractMessageDriver implements IMessageDrive
     channel.sendToQueue(queue, Buffer.from(message));
   }
 
-  subscribePersist(): Promise<IUnsubscribeOptions> {
-    return Promise.resolve(<IUnsubscribeOptions>{ unsubscribe: () => Promise.resolve() });
+  async subscribePersist(opts: ISubscribePersistOptions): Promise<IUnsubscribeOptions> {
+    return this.subscribe(opts);
   }
 
-  subscribePersistFromBeginning(): Promise<IUnsubscribeOptions> {
-    return Promise.resolve(<IUnsubscribeOptions>{ unsubscribe: () => Promise.resolve() });
+  async publishPersist(queue: string, message: string): Promise<void> {
+    const channel = await this.rabbitClient.createChannel();
+    await channel.assertQueue(queue, { durable: true });
+    channel.sendToQueue(queue, Buffer.from(message), { persistent: true });
   }
 
-  publishPersist(): Promise<string> {
-    return Promise.resolve("");
-  }
-
-  lastPersistMessage(): Promise<string> {
-    return Promise.resolve("");
+  lastPersistMessage(queue: string): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      const unsubscribeResult = this.subscribePersist(<ISubscribePersistOptions>{
+        queue: queue,
+        callback: (msg) => {
+          unsubscribeResult
+            .then((unsubscribeSettings) => unsubscribeSettings.unsubscribe)
+            .then(() => resolve(msg));
+        },
+        timeoutInMs: 5 * 1000,
+        timeoutCallback: () => reject(new Error("Fetching last persist message timed out!"))
+      });
+    });
   }
 }

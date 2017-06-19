@@ -9,7 +9,7 @@ export default class {
         this.messageDriver = messageDriver;
     }
 
-    persist(storeId: number, data: string): Promise<string> {
+    persist(storeId: number, data: string): Promise<void> {
         return this.messageDriver.publishPersist(generateStorePath(storeId), data);
     }
 
