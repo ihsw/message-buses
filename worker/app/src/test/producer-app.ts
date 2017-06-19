@@ -7,9 +7,8 @@ import { GetDriver } from "../message-drivers";
 import { IMessageDriver, ISubscribePersistOptions } from "../message-drivers/IMessageDriver";
 import { GetNatsClient } from "../message-drivers/NatsDriver";
 import { MetricsCollector } from "../lib/MetricsCollector";
-import { getUniqueName } from "../lib/helper";
+import { getUniqueName, defaultAppName } from "../lib/helper";
 import run from "../lib/producer-app";
-import { defaultAppName } from "../lib/helper";
 
 let messageDriver: IMessageDriver;
 test.before(async () => {
