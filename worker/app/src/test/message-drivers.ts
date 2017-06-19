@@ -60,7 +60,7 @@ test("Driver should subscribe", async (t) => {
       queue: queue,
       callback: (receivedMsg) => {
         clearTimeout(tId);
-        unsubscribeResult.then((unsubscribe) => unsubscribe).then(() => {
+        unsubscribeResult.then((unsubscribeSettings) => unsubscribeSettings.unsubscribe).then(() => {
           t.is(receivedMsg, msg, "Message from subscription matches published message");
           resolve();
         });
@@ -116,7 +116,7 @@ test("Driver should support queue grouping", async (t) => {
           queue: queue,
           parallel: true,
           callback: (receivedMsg) => {
-            unsubscribeResult.then((unsubscribe) => unsubscribe).then(() => {
+            unsubscribeResult.then((unsubscribeSettings) => unsubscribeSettings.unsubscribe).then(() => {
               t.is(receivedMsg, msg, "Message from subscription matches published message");
               receivedCount += 1;
             });
@@ -146,13 +146,13 @@ test("Driver should timeout on non-existent subscription", async (t) => {
       callback: () => {
         clearTimeout(tId);
         unsubscribeResult
-          .then((unsubscribe) => unsubscribe)
+          .then((unsubscribeSettings) => unsubscribeSettings.unsubscribe)
           .then(() => reject(new Error("Subscription called callback when it should have failed!")));
       },
       timeoutInMs: 2 * 1000,
       timeoutCallback: () => {
         clearTimeout(tId);
-        unsubscribeResult.then((unsubscribe) => unsubscribe).then(() => {
+        unsubscribeResult.then((unsubscribeSettings) => unsubscribeSettings.unsubscribe).then(() => {
           t.pass();
           resolve();
         });
@@ -183,11 +183,11 @@ test("Driver should subscribe persist", async (t) => {
     const tId = setTimeout(() => reject(new Error("Test timed out!")), 5 * 1000);
 
     // setting up a subscribe handler
-    const unsubscribe = messageDriver.subscribePersist(<ISubscribePersistOptions>{
+    const unsubscribeResult = messageDriver.subscribePersist(<ISubscribePersistOptions>{
       queue: queue,
       callback: (receivedMsg) => {
         clearTimeout(tId);
-        unsubscribe();
+        unsubscribeResult.unsubscribe();
         t.is(receivedMsg, msg, "Message from subscription matches published message");
 
         resolve();
@@ -195,7 +195,7 @@ test("Driver should subscribe persist", async (t) => {
       timeoutInMs: 2 * 1000,
       timeoutCallback: () => {
         clearTimeout(tId);
-        unsubscribe();
+        unsubscribeResult.unsubscribe();
         reject(new Error("Subscription timed out!"));
       }
     });
@@ -212,17 +212,17 @@ test("Driver should timeout on non-existent persistent subscription", async (t) 
     const tId = setTimeout(() => reject(new Error("Test timed out!")), 5*1000);
 
     // setting up a subscribe handler
-    const unsubscribe = messageDriver.subscribePersist(<ISubscribePersistOptions>{
+    const unsubscribeResult = messageDriver.subscribePersist(<ISubscribePersistOptions>{
       queue: queue,
       callback: () => {
         clearTimeout(tId);
-        unsubscribe();
+        unsubscribeResult.unsubscribe();
         reject(new Error("Subscription against non-existent persistent queue called callback!"));
       },
       timeoutInMs: 2 * 1000,
       timeoutCallback: () => {
         clearTimeout(tId);
-        unsubscribe();
+        unsubscribeResult.unsubscribe();
         t.pass();
         resolve();
       }

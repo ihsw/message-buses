@@ -8,7 +8,7 @@ import {
   IMessageDriver,
   ISubscribeOptions,
   ISubscribePersistOptions,
-  IUnsubscribeCallback
+  IUnsubscribeOptions
 } from "../message-drivers/IMessageDriver";
 import { MetricsCollector, Metric, MetricFields } from "../lib/MetricsCollector";
 import RfmManager from "../lib/rfm-manager";
@@ -20,7 +20,7 @@ const queueTimeout = 10 * 1000;
 
 // subscribe response handler with timeouts
 interface ISubscribeHandlerCallback {
-  (tId: NodeJS.Timer, unsubscribeResult: Promise<IUnsubscribeCallback>, msg: string);
+  (tId: NodeJS.Timer, unsubscribeResult: Promise<IUnsubscribeOptions>, msg: string);
 }
 interface ISubscribeHandlerOptions {
   messageDriver: IMessageDriver;
@@ -130,7 +130,7 @@ export default (messageDriver: IMessageDriver, metricsCollector: MetricsCollecto
       res: res,
       queue: queue,
       callback: (tId, unsubscribeResult, msg) => {
-        unsubscribeResult.then((unsubscribe) => unsubscribe).then(() => {
+        unsubscribeResult.then((unsubscribeSettings) => unsubscribeSettings.unsubscribe).then(() => {
           clearTimeout(tId);
           res.send(msg);
         });
@@ -170,7 +170,7 @@ export default (messageDriver: IMessageDriver, metricsCollector: MetricsCollecto
         res.write(`${msg}\n`);
 
         if (isFinished) {
-          unsubscribeResult.then((unsubscribe) => unsubscribe).then(() => {
+          unsubscribeResult.then((unsubscribeSettings) => unsubscribeSettings.unsubscribe).then(() => {
             clearTimeout(tId);
             res.end();
           });
@@ -227,7 +227,7 @@ export default (messageDriver: IMessageDriver, metricsCollector: MetricsCollecto
       callback: (tId, unsubscribeResult, msg) => {
         clearTimeout(tId);
 
-        unsubscribeResult.then((unsubscribe) => unsubscribe).then(() => {
+        unsubscribeResult.then((unsubscribeSettings) => unsubscribeSettings.unsubscribe).then(() => {
           const msgBuf = Buffer.from(msg, "base64");
 
           // optionally sending the gzipped message

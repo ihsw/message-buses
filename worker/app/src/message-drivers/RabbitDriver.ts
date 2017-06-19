@@ -4,7 +4,7 @@ import AbstractMessageDriver from "./AbstractMessageDriver";
 import {
   IGetDriver,
   IMessageDriver,
-  IUnsubscribeCallback,
+  IUnsubscribeOptions,
   ISubscribeOptions
 } from "./IMessageDriver";
 
@@ -23,7 +23,7 @@ export class RabbitDriver extends AbstractMessageDriver implements IMessageDrive
     this.rabbitClient = rabbitClient;
   }
 
-  async subscribe(opts: ISubscribeOptions): Promise<IUnsubscribeCallback> {
+  async subscribe(opts: ISubscribeOptions): Promise<IUnsubscribeOptions> {
     const channel = await this.rabbitClient.createChannel();
 
     // asserting that the queue exists
@@ -54,9 +54,11 @@ export class RabbitDriver extends AbstractMessageDriver implements IMessageDrive
       channel.ack(msg);
     });
 
-    return new Promise<IUnsubscribeCallback>(
-      (resolve) => channel.deleteQueue(opts.queue).then(() => resolve())
-    );
+    return <IUnsubscribeOptions>{
+      unsubscribe: () => new Promise<void>((resolve, reject) =>
+        channel.deleteQueue(opts.queue).then(() => resolve()).catch(reject)
+      )
+    };
   }
 
   async publish(queue: string, message: string): Promise<void> {
@@ -65,12 +67,12 @@ export class RabbitDriver extends AbstractMessageDriver implements IMessageDrive
     channel.sendToQueue(queue, Buffer.from(message));
   }
 
-  subscribePersist(): IUnsubscribeCallback {
-    return () => Promise.resolve();
+  subscribePersist(): IUnsubscribeOptions {
+    return <IUnsubscribeOptions>{ unsubscribe: () => Promise.resolve() };
   }
 
-  subscribePersistFromBeginning(): IUnsubscribeCallback {
-    return () => Promise.resolve();
+  subscribePersistFromBeginning(): IUnsubscribeOptions {
+    return <IUnsubscribeOptions>{ unsubscribe: () => Promise.resolve() };
   }
 
   publishPersist(): Promise<string> {

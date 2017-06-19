@@ -9,7 +9,7 @@ import {
   IMessageDriver,
   ISubscribeOptions,
   ISubscribePersistOptions,
-  IUnsubscribeCallback
+  IUnsubscribeOptions
 } from "./IMessageDriver";
 import { Measurements } from "../lib/influx";
 import { Metric, MetricFields } from "../lib/MetricsCollector";
@@ -54,7 +54,7 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
     this.nssClient = nssClient;
   }
 
-  subscribe(opts: ISubscribeOptions): Promise<IUnsubscribeCallback> {
+  subscribe(opts: ISubscribeOptions): Promise<IUnsubscribeOptions> {
     let sId;
     if (!opts.parallel) {
       sId = this.natsClient.subscribe(opts.queue, (msg) => opts.callback(msg));
@@ -67,12 +67,12 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
       this.natsClient.timeout(sId, opts.timeoutInMs, 0, cb);
     }
 
-    return new Promise<IUnsubscribeCallback>(
-      () => Promise.resolve(this.natsClient.unsubscribe(sId))
-    );
+    return Promise.resolve(<IUnsubscribeOptions>{
+      unsubscribe: () => Promise.resolve(this.natsClient.unsubscribe(sId))
+    });
   }
 
-  private subscribePersistWithOptions(opts: ISubscribeOptions, subscribeOpts: NSS.SubscriptionOptions): IUnsubscribeCallback {
+  private subscribePersistWithOptions(opts: ISubscribeOptions, subscribeOpts: NSS.SubscriptionOptions): IUnsubscribeOptions {
     const subscription = this.nssClient.subscribe(opts.queue, `${opts.queue}.workers`, subscribeOpts);
 
     let tId;
@@ -97,20 +97,17 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
       opts.callback(result);
     });
 
-    return () => new Promise<void>((resolve) => {
-      subscription.unsubscribe();
-      resolve();
-    });
+    return <IUnsubscribeOptions>{ unsubscribe: () => Promise.resolve(subscription.unsubscribe()) };
   }
 
-  subscribePersist(opts: ISubscribePersistOptions): IUnsubscribeCallback {
+  subscribePersist(opts: ISubscribePersistOptions): IUnsubscribeOptions {
     return this.subscribePersistWithOptions(
       opts,
       this.nssClient.subscriptionOptions()
     );
   }
 
-  subscribePersistFromBeginning(opts: ISubscribePersistOptions): IUnsubscribeCallback {
+  subscribePersistFromBeginning(opts: ISubscribePersistOptions): IUnsubscribeOptions {
     const subscriptionOpts = this.nssClient.subscriptionOptions();
     subscriptionOpts.setStartAtSequence(0);
     return this.subscribePersistWithOptions(opts, subscriptionOpts);
