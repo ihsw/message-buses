@@ -3,15 +3,17 @@ import * as zlib from "zlib";
 
 import { test } from "ava";
 
+import { GetDriver } from "../message-drivers";
 import { IMessageDriver, ISubscribePersistOptions } from "../message-drivers/IMessageDriver";
-import { GetDriver, GetNatsClient } from "../message-drivers/NatsDriver";
+import { GetNatsClient } from "../message-drivers/NatsDriver";
 import { MetricsCollector } from "../lib/MetricsCollector";
 import { getUniqueName } from "../lib/helper";
 import run from "../lib/producer-app";
+import { defaultAppName } from "../lib/helper";
 
 let messageDriver: IMessageDriver;
 test.before(async () => {
-  const driverName = "nats-producer-app-test";
+  const driverName = defaultAppName;
 
   // connecting to the metrics collector
   const metricsNatsClient = GetNatsClient(`${driverName}-metrics-collector`, process.env["METRICS_HOST"], Number(process.env["METRICS_PORT"]));

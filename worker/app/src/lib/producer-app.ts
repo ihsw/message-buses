@@ -20,10 +20,16 @@ export default (messageDriver: IMessageDriver, parallel: boolean) => {
       const queue = req.queue;
       const count = Number(req.count);
 
-      for (let i = 0; i < count; i++) {
+      const publish = (i) => {
+        if (i === count) {
+          return;
+        }
+
         messageDriver.publish(queue, `Pong #${i}`)
+          .then(() => publish(i + 1))
           .catch((err: Error) => { throw err; });
       }
+      publish(0);
     }
   });
   messageDriver.subscribe({
