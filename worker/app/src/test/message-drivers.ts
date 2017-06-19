@@ -2,7 +2,7 @@ import * as process from "process";
 
 import { test } from "ava";
 
-import { DriverHandlers } from "../message-drivers";
+import { GetDriver } from "../message-drivers";
 import {
   IMessageDriver,
   ISubscribeOptions,
@@ -13,13 +13,7 @@ import { MetricsCollector } from "../lib/MetricsCollector";
 import { defaultAppName } from "../lib/helper";
 
 let messageDriver: IMessageDriver;
-test.before(async (t) => {
-  // resolving the driver config
-  const driverType = process.env["DRIVER_TYPE"];
-  t.truthy(driverType, "Env var DRIVER_TYPE must not be blank");
-  t.true(driverType in DriverHandlers, "Invalid driver type");
-  const getDriver = DriverHandlers[driverType];
-
+test.before(async () => {
   // misc
   const driverName = defaultAppName;
 
@@ -28,7 +22,7 @@ test.before(async (t) => {
   const metricsCollector = new MetricsCollector(metricsNatsClient);
 
   // connecting the message-driver
-  messageDriver = await getDriver(driverName, process.env);
+  messageDriver = await GetDriver(driverName, process.env);
   messageDriver.metricsCollector = metricsCollector;
 });
 
