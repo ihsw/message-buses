@@ -102,7 +102,6 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
 
   subscribePersist(opts: ISubscribePersistOptions): Promise<IUnsubscribeOptions> {
     const subscriptionOpts = this.nssClient.subscriptionOptions();
-    subscriptionOpts.setStartAtSequence(0);
     return this.subscribePersistWithOptions(opts, subscriptionOpts);
   }
 
@@ -127,7 +126,7 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
     });
   }
 
-  async lastPersistMessage(queue: string): Promise<string> {
+  lastPersistMessage(queue: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       const unsubscribeResult = this.subscribePersist(<ISubscribePersistOptions>{
         queue: queue,
