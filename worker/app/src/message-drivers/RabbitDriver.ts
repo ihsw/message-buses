@@ -64,7 +64,7 @@ export class RabbitDriver extends AbstractMessageDriver implements IMessageDrive
 
   async publish(queue: string, message: string): Promise<void> {
     const channel = await this.rabbitClient.createChannel();
-    await channel.assertQueue(queue);
+    await channel.assertQueue(queue, { durable: false });
     channel.sendToQueue(queue, Buffer.from(message), { persistent: false });
   }
 
