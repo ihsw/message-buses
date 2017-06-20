@@ -24,14 +24,14 @@ export const waitingRequest = (messageDriver: IMessageDriver): Promise<void> => 
 
         if (isFinished) {
           unsubscribeResult
-            .then((unsubscribe) => unsubscribe)
+            .then((unsubscribeSettings) => unsubscribeSettings.unsubscribe)
             .then(() => resolve());
         }
       },
       timeoutInMs: 5*1000,
       timeoutCallback: () => {
         unsubscribeResult
-          .then((unsubscribe) => unsubscribe)
+          .then((unsubscribeSettings) => unsubscribeSettings.unsubscribe)
           .then(() => reject(new Error("Timed out!")));
       }
     });
@@ -52,13 +52,13 @@ export const request = (messageDriver: IMessageDriver): Promise<void> => {
       parallel: true,
       callback: () => {
         unsubscribeResult
-          .then((unsubscribe) => unsubscribe)
+          .then((unsubscribeSettings) => unsubscribeSettings.unsubscribe)
           .then(() => resolve());
       },
       timeoutInMs: 5*1000,
       timeoutCallback: () => {
         unsubscribeResult
-          .then((unsubscribe) => unsubscribe)
+          .then((unsubscribeSettings) => unsubscribeSettings.unsubscribe)
           .then(() => reject(new Error("Timed out!")));
       }
     });
