@@ -56,6 +56,21 @@ services:
     - nats-consumer
     volumes:
     - ./worker/app:/srv/app
+  nats-dev:
+    build: ./worker
+    depends_on:
+    - nats-server
+    - influxdb-buffer
+    environment:
+    - NATS_HOST=nats-server
+    - NATS_PORT=4222
+    - METRICS_HOST=nats-server
+    - METRICS_PORT=4222
+    - DRIVER_TYPE=nats
+    command:
+    - bash
+    volumes:
+    - ./worker/app:/srv/app
   nats-benchmarker:
     build: ./worker
     depends_on:
