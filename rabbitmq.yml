@@ -22,6 +22,7 @@ services:
     - METRICS_PORT=4222
     - RABBIT_HOST=rabbit-server
     - RABBIT_PORT=5672
+    - DRIVER_TYPE=rabbit
     command:
     - ./bin/run-app
     - rabbit-producer
