@@ -28,7 +28,7 @@ export class RabbitDriver extends AbstractMessageDriver implements IMessageDrive
     const channel = await this.rabbitClient.createChannel();
 
     // asserting that the queue exists
-    channel.assertQueue(opts.queue);
+    channel.assertQueue(opts.queue, { durable: false });
 
     // optionally setting up a timeout callback
     let tId;
@@ -65,7 +65,7 @@ export class RabbitDriver extends AbstractMessageDriver implements IMessageDrive
   async publish(queue: string, message: string): Promise<void> {
     const channel = await this.rabbitClient.createChannel();
     await channel.assertQueue(queue);
-    channel.sendToQueue(queue, Buffer.from(message));
+    channel.sendToQueue(queue, Buffer.from(message), { persistent: false });
   }
 
   async subscribePersist(opts: ISubscribePersistOptions): Promise<IUnsubscribeOptions> {
