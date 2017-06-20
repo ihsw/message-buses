@@ -15,14 +15,14 @@ import { defaultAppName } from "../lib/helper";
 let messageDriver: IMessageDriver;
 test.before(async () => {
   // misc
-  const driverName = defaultAppName;
+  const driverName = "message-drivers-test";
 
   // connecting to the metrics collector
   const metricsNatsClient = GetNatsClient(`${driverName}-metrics-collector`, process.env["METRICS_HOST"], Number(process.env["METRICS_PORT"]));
   const metricsCollector = new MetricsCollector(metricsNatsClient);
 
   // connecting the message-driver
-  messageDriver = await GetDriver(driverName, process.env);
+  messageDriver = await GetDriver(defaultAppName, driverName, process.env);
   messageDriver.metricsCollector = metricsCollector;
 });
 

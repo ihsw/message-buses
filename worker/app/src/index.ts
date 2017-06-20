@@ -8,7 +8,9 @@ import {
   NatsConsumer,
   NatsProducer,
   NssPopulate,
-  NatsBenchmarker
+  NatsBenchmarker,
+  RabbitConsumer,
+  RabbitProducer
 } from "./commands";
 
 // program definition
@@ -69,6 +71,36 @@ const natsBenchmarkerCommand = program.command("nats-benchmarker")
     const workload = natsBenchmarkerCommand.opts()["workload"];
 
     NatsBenchmarker(process.env, duration, workload).then(() => process.exit(0))
+      .catch((err) => {
+        console.error(err);
+        process.exit(1);
+      });
+  });
+
+// listening on queues for testing throughput
+program.command("rabbit-producer")
+  .description("Listens on Rabbit queues for testing throughput")
+  .action(() => {
+    RabbitProducer(process.env)
+      .then(() => {
+        console.log("Listening on queues");
+        process.on("SIGINT", () => process.exit(0));
+      })
+      .catch((err) => {
+        console.error(err);
+        process.exit(1);
+      });
+  });
+
+// listening on http for testing throughput
+program.command("rabbit-consumer")
+  .description("Listening on http for testing Rabbit throughput")
+  .action(() => {
+    RabbitConsumer(process.env)
+      .then(() => {
+        console.log(`Listening on ${process.env["APP_PORT"]}`);
+        process.on("SIGINT", () => process.exit(0));
+      })
       .catch((err) => {
         console.error(err);
         process.exit(1);

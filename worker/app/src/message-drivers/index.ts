@@ -11,7 +11,7 @@ export const DriverHandlers = <IDriverHandlers>{
   "rabbit": GetRabbitDriver
 };
 
-export const GetDriver = (name: string, env: any): Promise<IMessageDriver> => {
+export const GetDriver = (name: string, clientId: string, env: any): Promise<IMessageDriver> => {
   if (!("DRIVER_TYPE" in env)) {
     throw new Error("Env var DRIVER_TYPE must not be blank!");
   }
@@ -21,5 +21,5 @@ export const GetDriver = (name: string, env: any): Promise<IMessageDriver> => {
     throw new Error(`Driver type must be one of the following: ${Object.keys(DriverHandlers)}`);
   }
 
-  return DriverHandlers[driverType](name, env);
+  return DriverHandlers[driverType](name, clientId, env);
 };

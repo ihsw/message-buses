@@ -14,14 +14,14 @@ import { getUniqueName, readFile, defaultAppName } from "../lib/helper";
 let app: supertest.SuperTest<supertest.Test>;
 let rfmManager: RfmManager;
 test.before(async () => {
-  const driverName = defaultAppName;
+  const driverName = "consumer-app-test";
 
   // connecting to the metrics collector
   const metricsNatsClient = GetNatsClient(`${driverName}-metrics-collector`, process.env["METRICS_HOST"], Number(process.env["METRICS_PORT"]));
   const metricsCollector = new MetricsCollector(metricsNatsClient);
 
   // connecting the message-driver
-  const messageDriver = await GetDriver(driverName, process.env);
+  const messageDriver = await GetDriver(defaultAppName, driverName, process.env);
   messageDriver.metricsCollector = metricsCollector;
 
   app = supertest(getApp(messageDriver, metricsCollector));

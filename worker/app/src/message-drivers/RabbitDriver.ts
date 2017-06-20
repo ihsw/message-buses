@@ -9,7 +9,7 @@ import {
   ISubscribePersistOptions
 } from "./IMessageDriver";
 
-export const GetDriver: IGetDriver = async (vhost: string, env: any): Promise<RabbitDriver> => {
+export const GetDriver: IGetDriver = async (vhost: string, _: string, env: any): Promise<RabbitDriver> => {
   return new RabbitDriver(await amqplib.connect(
     `amqp://${env["RABBIT_HOST"]}:${env["RABBIT_PORT"]}/${vhost}`
   ));

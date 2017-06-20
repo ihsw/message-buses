@@ -3,7 +3,7 @@ import { GetDriver } from "../message-drivers";
 import { GetNatsClient } from "../message-drivers/NatsDriver";
 import { MetricsCollector } from "../lib/MetricsCollector";
 import run from "../lib/benchmarker";
-import { getUniqueName } from "../lib/helper";
+import { defaultAppName, getUniqueName } from "../lib/helper";
 
 export const ExpectedEnvVars: Array<string | ConnectionInfo> = [
   new ConnectionInfo("NATS_HOST", "NATS_PORT"),
@@ -18,7 +18,7 @@ export default async (env: any, duration: string, workload: string): Promise<voi
   metricsCollector.disabled = true;
 
   // connecting the message-driver
-  const messageDriver = await GetDriver(driverName, env);
+  const messageDriver = await GetDriver(defaultAppName, driverName, env);
   messageDriver.metricsCollector = metricsCollector;
 
   // running it out

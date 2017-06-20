@@ -29,7 +29,7 @@ export interface IUnsubscribeOptions {
 }
 
 export interface IGetDriver {
-  (name: string, env: any): Promise<IMessageDriver>;
+  (name: string, clientId: string, env: any): Promise<IMessageDriver>;
 }
 
 export interface IMessageDriver {
