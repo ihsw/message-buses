@@ -69,10 +69,6 @@ export const request = (messageDriver: IMessageDriver): Promise<void> => {
   });
 };
 
-export const ExpectedEnvVars: Array<string | ConnectionInfo> = [
-  new ConnectionInfo("NATS_HOST", "NATS_PORT"),
-  new ConnectionInfo("METRICS_HOST", "METRICS_PORT")
-];
 export default async (messageDriver: IMessageDriver, _: MetricsCollector, duration: string, workload: string): Promise<void> => {
   // parsing the duration
   const parsedDuration: number = parseDuration(duration);
