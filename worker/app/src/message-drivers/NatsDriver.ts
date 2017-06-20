@@ -13,7 +13,6 @@ import {
 } from "./IMessageDriver";
 import { Measurements } from "../lib/influx";
 import { Metric, MetricFields } from "../lib/MetricsCollector";
-import { defaultAppName } from "../lib/helper";
 
 export const GetNatsClient = (name: string, natsHost: string, natsPort: number): NATS.Client => {
   return NATS.connect(<NATS.ClientOpts>{
@@ -23,7 +22,7 @@ export const GetNatsClient = (name: string, natsHost: string, natsPort: number):
   });
 };
 
-export const GetDriver: IGetDriver = (_: string, clientId: string, env: any): Promise<NatsDriver> => {
+export const GetDriver: IGetDriver = (driverName: string, clientId: string, env: any): Promise<NatsDriver> => {
   return new Promise<NatsDriver>((resolve, reject) => {
     // parsing env vars
     const natsHost = env["NATS_HOST"];
@@ -33,7 +32,7 @@ export const GetDriver: IGetDriver = (_: string, clientId: string, env: any): Pr
     const natsClient = GetNatsClient(clientId, natsHost, natsPort);
 
     // connecting to nss
-    const clusterId = env["NATS_CLUSTER_ID"] ? env["NATS_CLUSTER_ID"] : defaultAppName;
+    const clusterId = env["NATS_CLUSTER_ID"] ? env["NATS_CLUSTER_ID"] : driverName;
     const nssClient = NSS.connect(clusterId, clientId, <NSS.StanOptions>{ nc: natsClient });
     const tId = setTimeout(() => reject(new Error(`Could not connect to the nats-streaming-server at ${natsHost}:${natsPort}!`)), 5*1000);
     nssClient.on("connect", () => {
