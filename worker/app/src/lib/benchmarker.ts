@@ -2,7 +2,6 @@ import * as process from "process";
 
 import * as parseDuration from "parse-duration";
 
-import { ConnectionInfo } from "../commands/interfaces";
 import { IMessageDriver, ISubscribeOptions } from "../message-drivers/IMessageDriver";
 import { MetricsCollector } from "../lib/MetricsCollector";
 import { getUniqueName } from "../lib/helper";
