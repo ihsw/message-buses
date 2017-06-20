@@ -19,4 +19,4 @@ METRICS_HOST=$(gcloud compute instances list | grep influxdb-server | awk '{prin
 
 # building the image and running it
 gcloud compute ssh $GCLOUD_AUTH -- "cd ./message-buses && git pull && docker build -t ihsw/rabbit-producer ./worker"
-gcloud compute ssh $GCLOUD_AUTH -- "docker run -it -e RABBIT_HOST=$RABBIT_HOST -e METRICS_HOST=$METRICS_HOST -e IS_CLUSTERING=1 ihsw/rabbit-producer ./bin/run-app rabbit-producer"
+gcloud compute ssh $GCLOUD_AUTH -- "docker run -it -e RABBIT_HOST=$RABBIT_HOST -e METRICS_HOST=$METRICS_HOST -e IS_CLUSTERING=1 -e DRIVER_TYPE=rabbit ihsw/rabbit-producer ./bin/run-app rabbit-producer"
