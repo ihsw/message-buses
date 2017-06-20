@@ -7,7 +7,7 @@ import { MetricsCollector } from "../lib/MetricsCollector";
 import { getUniqueName } from "../lib/helper";
 
 export const waitingRequest = (messageDriver: IMessageDriver): Promise<void> => {
-  const expectedResponseMessages = 5;
+  const expectedResponseMessages = 5000;
 
   return new Promise<void>((resolve, reject) => {
     // generating a unique response queue name
