@@ -1,12 +1,14 @@
 import { test } from "ava";
 
-import { GetDriver, GetNatsClient } from "../message-drivers/NatsDriver";
+import { GetDriver } from "../message-drivers";
+import { GetNatsClient } from "../message-drivers/NatsDriver";
 import { MetricsCollector } from "../lib/MetricsCollector";
+import { defaultAppName } from "../lib/helper";
 import RfmManager from "../lib/rfm-manager";
 
 let rfmManager: RfmManager;
 test.before(async () => {
-  const driverName = "nats-rfm-manager-test";
+  const driverName = defaultAppName;
 
   // connecting to the metrics collector
   const metricsNatsClient = GetNatsClient(`${driverName}-metrics-collector`, process.env["METRICS_HOST"], Number(process.env["METRICS_PORT"]));
