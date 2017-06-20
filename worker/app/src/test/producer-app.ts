@@ -59,15 +59,18 @@ test("Producer app should respond on queueWaiting queue", async (t) => {
     const count = 10;
 
     let messageCount = 0;
+    const expectedResults = (new Array(count)).map((_, i) => `Pong #${i}`);
     const unsubscribeResult = messageDriver.subscribe(<ISubscribePersistOptions>{
       queue: queue,
       callback: (msg) => {
-        t.is(msg, `Pong #${messageCount}`);
+        expectedResults.splice(expectedResults.indexOf(msg), 1);
 
         messageCount += 1;
         const isFinished = messageCount === count;
 
         if (isFinished) {
+          t.is(expectedResults.length, 0);
+
           unsubscribeResult
             .then((unsubscribe) => unsubscribe)
             .then(() => resolve());
