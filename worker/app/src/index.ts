@@ -10,7 +10,8 @@ import {
   NssPopulate,
   NatsBenchmarker,
   RabbitConsumer,
-  RabbitProducer
+  RabbitProducer,
+  RabbitBenchmarker
 } from "./commands";
 
 // program definition
@@ -101,6 +102,22 @@ program.command("rabbit-consumer")
         console.log(`Listening on ${process.env["APP_PORT"]}`);
         process.on("SIGINT", () => process.exit(0));
       })
+      .catch((err) => {
+        console.error(err);
+        process.exit(1);
+      });
+  });
+
+// running benchmark tests for a given duration
+const rabbitBenchmarkerCommand = program.command("rabbit-benchmarker")
+  .description("Running RabbitMQ benchmark tests for a given duration")
+  .option("-d, --duration <duration>", "Duration")
+  .option("-w, --workload <workload>", "workload")
+  .action(() => {
+    const duration = rabbitBenchmarkerCommand.opts()["duration"];
+    const workload = rabbitBenchmarkerCommand.opts()["workload"];
+
+    RabbitBenchmarker(process.env, duration, workload).then(() => process.exit(0))
       .catch((err) => {
         console.error(err);
         process.exit(1);

@@ -9,8 +9,10 @@ import { ExpectedEnvVars as NatsBenchmarkerEnvVars } from "./nats-benchmarker";
 
 export { default as RabbitConsumer } from "./rabbit-consumer";
 export { default as RabbitProducer } from "./rabbit-producer";
+export { default as RabbitBenchmarker } from "./rabbit-benchmarker";
 import { ExpectedEnvVars as RabbitConsumerEnvVars } from "./rabbit-consumer";
 import { ExpectedEnvVars as RabbitProducerEnvVars } from "./rabbit-producer";
+import { ExpectedEnvVars as RabbitBenchmarkerEnvVars } from "./rabbit-benchmarker";
 import { ICommandEnvVars } from "./interfaces";
 
 export const CommandEnvVarList: ICommandEnvVars = {
@@ -18,6 +20,8 @@ export const CommandEnvVarList: ICommandEnvVars = {
   "nats-producer": NatsProducerEnvVars,
   "nss-populate": NssPopulateEnvVars,
   "nats-benchmarker": NatsBenchmarkerEnvVars,
+
   "rabbit-consumer": RabbitConsumerEnvVars,
-  "rabbit-producer": RabbitProducerEnvVars
+  "rabbit-producer": RabbitProducerEnvVars,
+  "rabbit-benchmarker": RabbitBenchmarkerEnvVars
 };
