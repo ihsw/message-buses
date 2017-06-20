@@ -1,7 +1,8 @@
 import { ConnectionInfo } from "./interfaces";
 import { MetricsCollector } from "../lib/MetricsCollector";
 import { getFilenames, readFile } from "../lib/helper";
-import { GetDriver, GetNatsClient } from "../message-drivers/NatsDriver";
+import { GetDriver } from "../message-drivers";
+import { GetNatsClient } from "../message-drivers/NatsDriver";
 import RfmManager from "../lib/rfm-manager";
 
 export const ExpectedEnvVars: Array<string | ConnectionInfo> = [

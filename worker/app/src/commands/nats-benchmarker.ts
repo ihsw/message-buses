@@ -1,5 +1,6 @@
 import { ConnectionInfo } from "./interfaces";
-import { GetDriver, GetNatsClient } from "../message-drivers/NatsDriver";
+import { GetDriver } from "../message-drivers";
+import { GetNatsClient } from "../message-drivers/NatsDriver";
 import { MetricsCollector } from "../lib/MetricsCollector";
 import run from "../lib/benchmarker";
 import { getUniqueName } from "../lib/helper";
