@@ -128,7 +128,12 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
 
   lastPersistMessage(queue: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-      const unsubscribeResult = this.subscribePersist(<ISubscribePersistOptions>{
+      // defining subscription opts
+      const subscriptionOpts = this.nssClient.subscriptionOptions();
+      subscriptionOpts.setStartWithLastReceived();
+
+      // subscribing for a message
+      const unsubscribeResult = this.subscribePersistWithOptions(<ISubscribePersistOptions>{
         queue: queue,
         callback: (msg) => {
           unsubscribeResult
@@ -137,7 +142,7 @@ export class NatsDriver extends AbstractMessageDriver implements IMessageDriver 
         },
         timeoutInMs: 5 * 1000,
         timeoutCallback: () => reject(new Error("Fetching last persist message timed out!"))
-      });
+      }, subscriptionOpts);
     });
   }
 }
