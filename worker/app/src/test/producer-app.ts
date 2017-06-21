@@ -2,6 +2,7 @@ import * as process from "process";
 import * as zlib from "zlib";
 
 import { test } from "ava";
+import * as parseDuration from "parse-duration";
 
 import { GetDriver } from "../message-drivers";
 import { IMessageDriver, ISubscribePersistOptions } from "../message-drivers/IMessageDriver";
@@ -34,16 +35,20 @@ test("Producer app should respond on queues queue", async (t) => {
     const unsubscribeResult = messageDriver.subscribe(<ISubscribePersistOptions>{
       queue: queue,
       callback: (msg) => {
-        unsubscribeResult.then((unsubscribe) => unsubscribe).then(() => {
-          t.is(msg, "Pong");
-          resolve();
-        });
+        unsubscribeResult
+          .then((unsubscribeSettings) => unsubscribeSettings.unsubscribe)
+          .then(() => {
+            t.is(msg, "Pong");
+            resolve();
+          })
+          .catch(reject);
       },
       timeoutInMs: 2 * 1000,
       timeoutCallback: () => {
         unsubscribeResult
-          .then((unsubscribe) => unsubscribe)
-          .then(() => reject(new Error(`Queues subscription timed out!`)));
+          .then((unsubscribeSettings) => unsubscribeSettings.unsubscribe)
+          .then(() => reject(new Error(`Queues subscription timed out!`)))
+          .catch(reject);
       }
     });
 
@@ -72,15 +77,17 @@ test("Producer app should respond on queueWaiting queue", async (t) => {
           t.is(expectedResults.length, 0);
 
           unsubscribeResult
-            .then((unsubscribe) => unsubscribe)
-            .then(() => resolve());
+            .then((unsubscribeSettings) => unsubscribeSettings.unsubscribe)
+            .then(() => resolve())
+            .catch(reject);
         }
       },
       timeoutInMs: 2 * 1000,
       timeoutCallback: () => {
         unsubscribeResult
-          .then((unsubscribe) => unsubscribe)
-          .then(() => reject(new Error(`Queues subscription timed out!`)));
+          .then((unsubscribeSettings) => unsubscribeSettings.unsubscribe)
+          .then(() => reject(new Error(`Queues subscription timed out!`)))
+          .catch(reject);
       }
     });
 
@@ -117,14 +124,58 @@ test("Producer app should respond on queueBloating queue", async (t) => {
       timeoutInMs: 2 * 1000,
       timeoutCallback: () => {
         unsubscribeResult
-          .then((unsubscribe) => unsubscribe)
-          .then(() => reject(new Error(`Queues subscription timed out!`)));
+          .then((unsubscribeSettings) => unsubscribeSettings.unsubscribe)
+          .then(() => reject(new Error(`Queues subscription timed out!`)))
+          .catch(reject);
       }
     });
 
     messageDriver.publish("queueBloating", JSON.stringify({
       queue: queue,
       length: length
-    }));
+    })).catch(reject);
+  });
+});
+
+test("Producer app should respond on queueDuration queue", async (t) => {
+  // generating a unique response queue name
+  const queue = getUniqueName("queue-duration-test");
+
+  return new Promise<void>((resolve, reject) => {
+    const duration: number = parseDuration("5s");
+
+    const tId = setTimeout(() => reject(new Error("Test timed out!")), 5*1000);
+
+    const unsubscribeResult = messageDriver.subscribe(<ISubscribePersistOptions>{
+      queue: queue,
+      callback: (msg) => {
+        clearTimeout(tId);;
+
+        if (msg === "Pong") {
+          return;
+        }
+
+        unsubscribeResult.then((unsubscribeSettings) => unsubscribeSettings.unsubscribe)
+          .then(() => {
+            t.pass();
+            resolve();
+          })
+          .catch(reject);
+      },
+      timeoutInMs: 2 * 1000,
+      timeoutCallback: () => {
+        clearTimeout(tId);
+
+        unsubscribeResult
+          .then((unsubscribeSettings) => unsubscribeSettings.unsubscribe)
+          .then(() => reject(new Error(`Queues subscription timed out!`)))
+          .catch(reject);
+      }
+    });
+
+    messageDriver.publish("queueDuration", JSON.stringify({
+      queue: queue,
+      duration: duration
+    })).catch(reject);
   });
 });

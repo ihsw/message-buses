@@ -47,4 +47,53 @@ export default (messageDriver: IMessageDriver, parallel: boolean) => {
       });
     }
   });
+  messageDriver.subscribe({
+    queue: "queueDuration",
+    parallel: parallel,
+    callback: (msg) => {
+      const req = JSON.parse(msg);
+      const queue = req.queue;
+      const duration = Number(req.duration);
+
+      // setting up a timeout to resolve when all messages are published
+      let promises: Promise<void>[] = [];
+      let running = true;
+      setTimeout(() => {
+        // flagging the loop to stop
+        running = false;
+
+        // waiting for all published messages to finish
+        Promise.all(promises)
+          .then(() => messageDriver.publish(queue, promises.length.toString()))
+          .catch((err) => { throw err; });
+      }, duration);
+
+      // entering recursive loop that publishes for a given duration
+      let innerPromises: Promise<void>[] = [];
+      const enqueue = () => {
+        if (!running) {
+          return;
+        }
+
+        innerPromises.push(messageDriver.publish(queue, "Pong"));
+
+        // rate limiting to prevent stack overflow
+        if (innerPromises.length > 1000) {
+          promises.push(Promise.all(innerPromises)
+            .then(() => {
+              innerPromises = [];
+              enqueue();
+            }));
+
+            return;
+        }
+
+        // repeating the call
+        enqueue();
+      };
+
+      // starting up the recursive message publishing
+      enqueue();
+    }
+  });
 };
