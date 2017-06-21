@@ -78,7 +78,7 @@ export default (messageDriver: IMessageDriver, parallel: boolean) => {
         innerPromises.push(messageDriver.publish(queue, "Pong"));
 
         // rate limiting to prevent stack overflow
-        if (innerPromises.length > 1000) {
+        if (innerPromises.length > 100) {
           promises.push(Promise.all(innerPromises)
             .then(() => {
               innerPromises = [];
