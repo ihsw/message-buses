@@ -115,7 +115,7 @@ export default async (messageDriver: IMessageDriver, _: MetricsCollector, durati
         }
 
         unsubscribeResult.then((unsubscribeSettings) => unsubscribeSettings.unsubscribe)
-          .then(() => resolve())
+          .then(() => exit())
           .catch(reject);
       },
       timeoutInMs: 2 * 1000,
