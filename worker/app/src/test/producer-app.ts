@@ -149,7 +149,7 @@ test("Producer app should respond on queueDuration queue", async (t) => {
     const unsubscribeResult = messageDriver.subscribe(<ISubscribePersistOptions>{
       queue: queue,
       callback: (msg) => {
-        clearTimeout(tId);;
+        clearTimeout(tId);
 
         if (msg === "Pong") {
           return;
