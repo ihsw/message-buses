@@ -12,7 +12,7 @@ do
 done
 
 # starting nats on the nats server
-NATS_INSTANCE=$(gcloud compute instances list | tail -n +2 | grep -vi terminated | grep -i nss-server | awk '{print $1}')
+NATS_INSTANCE=$(gcloud compute instances list | tail -n +2 | grep -vi terminated | grep -i message-bus | awk '{print $1}')
 gcloud compute ssh $DEFAULT_USER@$NATS_INSTANCE -- $'docker start $(docker ps -a | grep -i nats-server | awk \'{print $1}\')'
 
 # starting up everything on the influxdb-server except the telegraf container
