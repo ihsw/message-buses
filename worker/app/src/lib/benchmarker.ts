@@ -103,24 +103,35 @@ export default async (messageDriver: IMessageDriver, _: MetricsCollector, durati
     });
     
     // starting the loop up
-    console.log("Running benchmark");
-    const loop = () => {
-      const promises: Promise<void>[] = [];
-      for (let i = 0; i < parsedWorkload; i++) {
-        promises.push(waitingRequest(messageDriver));
-      }
+    console.log(`Starting the loop up with ${parsedDuration.toLocaleString()}ms duration and ${parsedWorkload} workload`);
+    const queue = getUniqueName("benchmarker");
+    const unsubscribeResult = messageDriver.subscribe(<ISubscribeOptions>{
+      queue: queue,
+      callback: (msg) => {
+        clearTimeout(tId);
 
-      Promise.all(promises).then(() => {
-        if (!running) {
-          exit();
-
+        if (msg === "Pong") {
           return;
         }
 
-        loop();
-      }).catch(reject);
-    };
+        unsubscribeResult.then((unsubscribeSettings) => unsubscribeSettings.unsubscribe)
+          .then(() => resolve())
+          .catch(reject);
+      },
+      timeoutInMs: 2 * 1000,
+      timeoutCallback: () => {
+        clearTimeout(tId);
 
-    loop();
+        unsubscribeResult
+          .then((unsubscribeSettings) => unsubscribeSettings.unsubscribe)
+          .then(() => reject(new Error(`Queues subscription timed out!`)))
+          .catch(reject);
+      }
+    });
+
+    messageDriver.publish("queueDuration", JSON.stringify({
+      queue: queue,
+      duration: parsedDuration
+    })).catch(reject);
   });
 };
