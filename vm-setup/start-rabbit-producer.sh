@@ -14,7 +14,7 @@ fi
 GCLOUD_AUTH="$DEFAULT_USER@$GCLOUD_INSTANCE"
 
 # fetching the ip for the nats and metrics hosts
-RABBIT_HOST=$(gcloud compute instances list | grep message-bus-4cpu | awk '{print $4}')
+RABBIT_HOST=$(gcloud compute instances list | grep message-bus | awk '{print $4}')
 METRICS_HOST=$(gcloud compute instances list | grep influxdb-server | awk '{print $4}')
 
 # building the image and running it
