@@ -51,29 +51,33 @@ func (r rate) calculateRate(pollTime time.Time) float64 {
 	return float64(r.delta) / tDelta.Seconds()
 }
 
-func main() {
+func getInfluxClient(host string, port string, database string) (influxdb.Client, error) {
 	// connecting to influxdb
 	ic, err := influxdb.NewHTTPClient(influxdb.HTTPConfig{
-		Addr: fmt.Sprintf("http://%s:%s", os.Getenv("INFLUX_HOST"), os.Getenv("INFLUX_PORT")),
+		Addr: fmt.Sprintf("http://%s:%s", host, port),
 	})
 	if err != nil {
-		fmt.Printf("Could not connect to influxdb: %s\n", err.Error())
-
-		return
+		return nil, err
 	}
-	defer ic.Close()
 
 	// creating database where appropriate
-	q := influxdb.NewQuery("CREATE DATABASE ecp4", "", "")
+	q := influxdb.NewQuery(fmt.Sprintf("CREATE DATABASE %s", database), "", "")
 	response, err := ic.Query(q)
 	if err != nil {
-		fmt.Printf("Could not create database: %s\n", err.Error())
-
-		return
+		return nil, err
 	}
 	if err := response.Error(); err != nil {
-		fmt.Printf("Could not create database: %s\n", err.Error())
+		return nil, err
+	}
 
+	return ic, nil
+}
+
+func main() {
+	// connecting to influxdb
+	ic, err := getInfluxClient(os.Getenv("INFLUX_HOST"), os.Getenv("INFLUX_PORT"), "ecp4")
+	if err != nil {
+		fmt.Printf("Could not get influx client: %s\n", err.Error())
 		return
 	}
 
