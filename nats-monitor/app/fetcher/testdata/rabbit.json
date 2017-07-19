@@ -1,0 +1,147 @@
+{
+    "management_version": "3.6.10",
+    "rates_mode": "basic",
+    "exchange_types": [
+        {
+            "name": "direct",
+            "description": "AMQP direct exchange, as per the AMQP specification",
+            "enabled": true
+        },
+        {
+            "name": "topic",
+            "description": "AMQP topic exchange, as per the AMQP specification",
+            "enabled": true
+        },
+        {
+            "name": "headers",
+            "description": "AMQP headers exchange, as per the AMQP specification",
+            "enabled": true
+        },
+        {
+            "name": "fanout",
+            "description": "AMQP fanout exchange, as per the AMQP specification",
+            "enabled": true
+        }
+    ],
+    "rabbitmq_version": "3.6.10",
+    "cluster_name": "rabbit@a980f2863275",
+    "erlang_version": "19.2.1",
+    "erlang_full_version": "Erlang/OTP 19 [erts-8.2.1] [source] [64-bit] [smp:8:8] [async-threads:128] [hipe] [kernel-poll:true]",
+    "message_stats": {
+        "publish": 227743,
+        "publish_details": {
+            "rate": 7084.6
+        },
+        "confirm": 0,
+        "confirm_details": {
+            "rate": 0
+        },
+        "return_unroutable": 0,
+        "return_unroutable_details": {
+            "rate": 0
+        },
+        "disk_reads": 0,
+        "disk_reads_details": {
+            "rate": 0
+        },
+        "disk_writes": 0,
+        "disk_writes_details": {
+            "rate": 0
+        },
+        "get": 0,
+        "get_details": {
+            "rate": 0
+        },
+        "get_no_ack": 0,
+        "get_no_ack_details": {
+            "rate": 0
+        },
+        "deliver": 239596,
+        "deliver_details": {
+            "rate": 4706.6
+        },
+        "deliver_no_ack": 0,
+        "deliver_no_ack_details": {
+            "rate": 0
+        },
+        "redeliver": 0,
+        "redeliver_details": {
+            "rate": 0
+        },
+        "ack": 239581,
+        "ack_details": {
+            "rate": 4705.6
+        },
+        "deliver_get": 239596,
+        "deliver_get_details": {
+            "rate": 4706.6
+        }
+    },
+    "queue_totals": {
+        "messages_ready": 8,
+        "messages_ready_details": {
+            "rate": 0
+        },
+        "messages_unacknowledged": 28,
+        "messages_unacknowledged_details": {
+            "rate": 5.6
+        },
+        "messages": 36,
+        "messages_details": {
+            "rate": 5.6
+        }
+    },
+    "object_totals": {
+        "consumers": 40,
+        "queues": 20,
+        "exchanges": 8,
+        "connections": 16,
+        "channels": 18533
+    },
+    "statistics_db_event_queue": 0,
+    "node": "rabbit@a980f2863275",
+    "listeners": [
+        {
+            "node": "rabbit@a980f2863275",
+            "protocol": "amqp",
+            "ip_address": "::",
+            "port": 5672,
+            "socket_opts": {
+                "backlog": 128,
+                "nodelay": true,
+                "linger": [
+                    true,
+                    0
+                ],
+                "exit_on_close": false
+            }
+        },
+        {
+            "node": "rabbit@a980f2863275",
+            "protocol": "clustering",
+            "ip_address": "::",
+            "port": 25672,
+            "socket_opts": []
+        },
+        {
+            "node": "rabbit@a980f2863275",
+            "protocol": "http",
+            "ip_address": "::",
+            "port": 15672,
+            "socket_opts": {
+                "port": 15672,
+                "ssl": false
+            }
+        }
+    ],
+    "contexts": [
+        {
+            "ssl_opts": [],
+            "node": "rabbit@a980f2863275",
+            "description": "RabbitMQ Management",
+            "path": "/",
+            "port": "15672",
+            "ssl": "false"
+        }
+    ]
+}
