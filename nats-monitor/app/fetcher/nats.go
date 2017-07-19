@@ -26,8 +26,13 @@ func (n nats) Get() (FetchData, error) {
 		return FetchData{}, err
 	}
 
+	return n.read(body)
+}
+
+// Get - fetches stats data from nats
+func (n nats) read(body []byte) (FetchData, error) {
 	var statz *gnatsd.Varz
-	err = json.Unmarshal(body, &statz)
+	err := json.Unmarshal(body, &statz)
 	if err != nil {
 		return FetchData{}, err
 	}
