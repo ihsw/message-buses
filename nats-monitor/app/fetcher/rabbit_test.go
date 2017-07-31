@@ -23,3 +23,27 @@ func TestRabbitRead(t *testing.T) {
 	assert.NotZero(t, data.InMsgs)
 	assert.NotZero(t, data.OutMsgs)
 }
+
+func TestRabbitGet(t *testing.T) {
+	contents, err := ioutil.ReadFile("./testdata/rabbit.json")
+	if err != nil {
+		t.Fatal(err)
+
+		return
+	}
+
+	r := rabbit{
+		fetcher: Fetcher{
+			fetch: func(uri string) ([]byte, error) { return contents, nil },
+		},
+	}
+	data, err := r.get()
+	if err != nil {
+		t.Fatal(err)
+
+		return
+	}
+
+	assert.NotZero(t, data.InMsgs)
+	assert.NotZero(t, data.OutMsgs)
+}

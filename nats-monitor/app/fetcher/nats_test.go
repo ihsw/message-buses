@@ -23,3 +23,26 @@ func TestNatsRead(t *testing.T) {
 	assert.NotZero(t, data.InMsgs)
 	assert.NotZero(t, data.OutMsgs)
 }
+func TestNatsGet(t *testing.T) {
+	contents, err := ioutil.ReadFile("./testdata/nats.json")
+	if err != nil {
+		t.Fatal(err)
+
+		return
+	}
+
+	n := nats{
+		fetcher: Fetcher{
+			fetch: func(uri string) ([]byte, error) { return contents, nil },
+		},
+	}
+	data, err := n.get()
+	if err != nil {
+		t.Fatal(err)
+
+		return
+	}
+
+	assert.NotZero(t, data.InMsgs)
+	assert.NotZero(t, data.OutMsgs)
+}

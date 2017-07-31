@@ -3,25 +3,26 @@ package fetcher
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 
 	gnatsd "github.com/nats-io/gnatsd/server"
 )
 
 type nats struct {
+	host    string
+	port    int
 	fetcher Fetcher
-	client  *http.Client
 }
 
-// Get - fetches stats data from nats
-func (n nats) Get() (FetchData, error) {
-	resp, err := n.client.Get(fmt.Sprintf("http://%s:%d/varz", n.fetcher.host, n.fetcher.port))
-	if err != nil {
-		return FetchData{}, err
+func newNats(host string, port int) nats {
+	return nats{
+		fetcher: Fetcher{fetch: defaultFetch},
+		host:    host,
+		port:    port,
 	}
+}
 
-	body, err := ioutil.ReadAll(resp.Body)
+func (n nats) get() (FetchData, error) {
+	body, err := n.fetcher.fetch(fmt.Sprintf("http://%s:%d/varz", n.host, n.port))
 	if err != nil {
 		return FetchData{}, err
 	}
@@ -29,7 +30,6 @@ func (n nats) Get() (FetchData, error) {
 	return n.read(body)
 }
 
-// Get - fetches stats data from nats
 func (n nats) read(body []byte) (FetchData, error) {
 	var statz *gnatsd.Varz
 	err := json.Unmarshal(body, &statz)

@@ -3,8 +3,6 @@ package fetcher
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 )
 
 type details struct {
@@ -21,18 +19,21 @@ type response struct {
 }
 
 type rabbit struct {
+	host    string
+	port    int
 	fetcher Fetcher
-	client  *http.Client
 }
 
-// Get - fetches stats data from nats
-func (r rabbit) Get() (FetchData, error) {
-	resp, err := r.client.Get(fmt.Sprintf("http://%s:%d/api/overview", r.fetcher.host, r.fetcher.port))
-	if err != nil {
-		return FetchData{}, err
+func newRabbit(host string, port int) rabbit {
+	return rabbit{
+		fetcher: Fetcher{fetch: defaultFetch},
+		host:    host,
+		port:    port,
 	}
+}
 
-	body, err := ioutil.ReadAll(resp.Body)
+func (r rabbit) get() (FetchData, error) {
+	body, err := r.fetcher.fetch(fmt.Sprintf("http://%s:%d/api/overview", r.host, r.port))
 	if err != nil {
 		return FetchData{}, err
 	}
