@@ -30,6 +30,32 @@ services:
     - "4442:4442"
     - "8222:8222"
 
+  # rabbit server
+  rabbit-server:
+    image: rabbitmq:3-management
+    ports:
+    - "5672:5672"
+    - "15672:15672"
+    environment:
+    - RABBITMQ_DEFAULT_VHOST=ecp4
+
+  # monitors an instance of nats&rabbit and reports usage stats to influx
+  message-bus-monitor:
+    build: ./message-bus-monitor
+    depends_on:
+    - influxdb-server
+    - nats-server
+    - rabbit-server
+    environment:
+    - INFLUX_HOST=influxdb-server
+    - INFLUX_PORT=8086
+    - NATS_HOST=nats-server
+    - NATS_PORT=8222
+    - RABBIT_HOST=rabbit-server
+    - RABBIT_PORT=15672
+    volumes:
+    - ./message-bus-monitor/app:/go/src/message-bus-monitor
+
   # reads influxdb writes out of a nats queue
   influxdb-buffer:
     build: ./influxdb-buffer

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"nats-monitor/fetcher"
+	"message-bus-monitor/fetcher"
 
 	"github.com/namsral/flag"
 
