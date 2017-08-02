@@ -7,21 +7,24 @@ import (
 	gnatsd "github.com/nats-io/gnatsd/server"
 )
 
-type nats struct {
+// Nats - nats fetcher
+type Nats struct {
 	host    string
 	port    int
 	fetcher Fetcher
 }
 
-func newNats(host string, port int) nats {
-	return nats{
+// NewNats - returns an instance of nats
+func NewNats(host string, port int) Nats {
+	return Nats{
 		fetcher: Fetcher{fetch: defaultFetch},
 		host:    host,
 		port:    port,
 	}
 }
 
-func (n nats) get() (FetchData, error) {
+// Get - fetches stats from an http endpoint
+func (n Nats) Get() (FetchData, error) {
 	body, err := n.fetcher.fetch(fmt.Sprintf("http://%s:%d/varz", n.host, n.port))
 	if err != nil {
 		return FetchData{}, err
@@ -30,7 +33,7 @@ func (n nats) get() (FetchData, error) {
 	return n.read(body)
 }
 
-func (n nats) read(body []byte) (FetchData, error) {
+func (n Nats) read(body []byte) (FetchData, error) {
 	var statz *gnatsd.Varz
 	err := json.Unmarshal(body, &statz)
 	if err != nil {

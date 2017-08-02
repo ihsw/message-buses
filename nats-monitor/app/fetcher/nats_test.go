@@ -12,7 +12,7 @@ func TestNatsRead(t *testing.T) {
 		return
 	}
 
-	n := nats{}
+	n := Nats{}
 	data, err := n.read(contents)
 	if err != nil {
 		t.Fatal(err)
@@ -31,12 +31,12 @@ func TestNatsGet(t *testing.T) {
 		return
 	}
 
-	n := nats{
+	n := Nats{
 		fetcher: Fetcher{
 			fetch: func(uri string) ([]byte, error) { return contents, nil },
 		},
 	}
-	data, err := n.get()
+	data, err := n.Get()
 	if err != nil {
 		t.Fatal(err)
 

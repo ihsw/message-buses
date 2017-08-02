@@ -12,7 +12,7 @@ func TestRabbitRead(t *testing.T) {
 		return
 	}
 
-	r := rabbit{}
+	r := Rabbit{}
 	data, err := r.read(contents)
 	if err != nil {
 		t.Fatal(err)
@@ -32,12 +32,12 @@ func TestRabbitGet(t *testing.T) {
 		return
 	}
 
-	r := rabbit{
+	r := Rabbit{
 		fetcher: Fetcher{
 			fetch: func(uri string) ([]byte, error) { return contents, nil },
 		},
 	}
-	data, err := r.get()
+	data, err := r.Get()
 	if err != nil {
 		t.Fatal(err)
 

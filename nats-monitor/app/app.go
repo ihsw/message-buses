@@ -1,44 +1,16 @@
 package main
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"os"
+	"nats-monitor/fetcher"
+
+	"github.com/namsral/flag"
 
 	"fmt"
-	"strconv"
 
 	"time"
 
 	influxdb "github.com/influxdata/influxdb/client/v2"
-	gnatsd "github.com/nats-io/gnatsd/server"
-	top "github.com/nats-io/nats-top/util"
 )
-
-func request(engine *top.Engine) (*gnatsd.Varz, error) {
-	uri := engine.Uri + "/varz"
-
-	resp, err := engine.HttpClient.Get(uri)
-	if resp != nil {
-		defer resp.Body.Close()
-	}
-	if err != nil {
-		return nil, fmt.Errorf("could not get stats from server: %v", err)
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("could not read response body: %v", err)
-	}
-
-	var statz *gnatsd.Varz
-	err = json.Unmarshal(body, &statz)
-	if err != nil {
-		return nil, fmt.Errorf("could not unmarshal json: %v", err)
-	}
-
-	return statz, nil
-}
 
 type rate struct {
 	name    string
@@ -51,10 +23,10 @@ func (r rate) calculateRate(pollTime time.Time) float64 {
 	return float64(r.delta) / tDelta.Seconds()
 }
 
-func getInfluxClient(host string, port string, database string) (influxdb.Client, error) {
+func getInfluxClient(host string, port int, database string) (influxdb.Client, error) {
 	// connecting to influxdb
 	ic, err := influxdb.NewHTTPClient(influxdb.HTTPConfig{
-		Addr: fmt.Sprintf("http://%s:%s", host, port),
+		Addr: fmt.Sprintf("http://%s:%d", host, port),
 	})
 	if err != nil {
 		return nil, err
@@ -74,25 +46,33 @@ func getInfluxClient(host string, port string, database string) (influxdb.Client
 }
 
 func main() {
+	var (
+		influxHost string
+		influxPort int
+		natsHost   string
+		natsPort   int
+		rabbitHost string
+		rabbitPort int
+	)
+
+	flag.StringVar(&influxHost, "influx_host", "", "Influx hostname")
+	flag.IntVar(&influxPort, "influx_port", -1, "Influx port")
+	flag.StringVar(&natsHost, "nats_host", "", "Nats hostname")
+	flag.IntVar(&natsPort, "nats_port", -1, "Nats port")
+	flag.StringVar(&rabbitHost, "rabbit_host", "", "Rabbit hostname")
+	flag.IntVar(&rabbitPort, "rabbit_port", -1, "Rabbit port")
+	flag.Parse()
+
 	// connecting to influxdb
-	ic, err := getInfluxClient(os.Getenv("INFLUX_HOST"), os.Getenv("INFLUX_PORT"), "ecp4")
+	ic, err := getInfluxClient(influxHost, influxPort, "ecp4")
 	if err != nil {
 		fmt.Printf("Could not get influx client: %s\n", err.Error())
 		return
 	}
 
-	// gathering nats connection info
-	host := os.Getenv("NATS_HOST")
-	port, err := strconv.Atoi(os.Getenv("NATS_INFO_PORT"))
-	if err != nil {
-		fmt.Printf("Port could not be converted to an int: %s\n", err.Error())
-
-		return
-	}
-
-	// starting up the nats-top engine
-	engine := top.NewEngine(host, port, 0, 0)
-	engine.SetupHTTP()
+	// setting up rabbit and nats fetchers
+	n := fetcher.NewNats(natsHost, natsPort)
+	// r := fetcher.NewRabbit(rabbitHost, rabbitPort)
 
 	// ticking
 	first := true
@@ -105,7 +85,7 @@ func main() {
 	fmt.Println("Polling for stats")
 	for _ = range tick {
 		// fetching stats
-		varz, err := request(engine)
+		varz, err := n.Get()
 		if err != nil {
 			fmt.Printf("Could not fetch varz: %s\n", err.Error())
 
@@ -151,6 +131,7 @@ func main() {
 			inBytesRate.name:  outMsgsRate.calculateRate(pollTime),
 			outBytesRate.name: outBytesRate.calculateRate(pollTime),
 		}
+		fmt.Printf("%v\n", fields)
 		point, err := influxdb.NewPoint("nats_performance", map[string]string{}, fields, time.Now())
 		if err != nil {
 			fmt.Printf("Could not create point: %s\n", err.Error())
