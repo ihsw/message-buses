@@ -173,11 +173,16 @@ func main() {
 		// populating the rates
 		natsRateGroup, err = natsRateGroup.update(natsFetcher)
 		if err != nil {
-			fmt.Printf("Could not update nats rate group: %s\n", err.Error())
+			fmt.Printf("Could not update rate group: %s\n", err.Error())
 
 			return
 		}
 		rabbitRateGroup, err = rabbitRateGroup.update(rabbitFetcher)
+		if err != nil {
+			fmt.Printf("Could not update rate group: %s\n", err.Error())
+
+			return
+		}
 
 		// skipping on first run
 		if first {
