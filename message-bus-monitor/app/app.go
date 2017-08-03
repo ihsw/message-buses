@@ -18,6 +18,82 @@ type rate struct {
 	lastVal int64
 }
 
+type rateGroup struct {
+	name         string
+	inMsgsRate   rate
+	outMsgsRate  rate
+	inBytesRate  rate
+	outBytesRate rate
+}
+
+func (r rateGroup) injestData(varz fetcher.FetchData) rateGroup {
+	inMsgsVal := varz.InMsgs
+	r.inMsgsRate.delta = inMsgsVal - r.inMsgsRate.lastVal
+	r.inMsgsRate.lastVal = inMsgsVal
+
+	outMsgsVal := varz.OutMsgs
+	r.outMsgsRate.delta = outMsgsVal - r.outMsgsRate.lastVal
+	r.outMsgsRate.lastVal = outMsgsVal
+
+	inBytesVal := varz.InBytes
+	r.inBytesRate.delta = inBytesVal - r.inBytesRate.lastVal
+	r.inBytesRate.lastVal = inBytesVal
+
+	outBytesVal := varz.OutBytes
+	r.outBytesRate.delta = outBytesVal - r.outBytesRate.lastVal
+	r.outBytesRate.lastVal = outBytesVal
+
+	return r
+}
+
+type updateFetcher interface {
+	Get() (fetcher.FetchData, error)
+}
+
+func (r rateGroup) update(f updateFetcher) (rateGroup, error) {
+	varz, err := f.Get()
+	if err != nil {
+		return rateGroup{}, err
+	}
+
+	r = r.injestData(varz)
+
+	return r, nil
+}
+
+func (r rateGroup) toInfluxFields(pollTime time.Time) map[string]interface{} {
+	return map[string]interface{}{
+		r.inMsgsRate.name:   r.inMsgsRate.calculateRate(pollTime),
+		r.outMsgsRate.name:  r.outMsgsRate.calculateRate(pollTime),
+		r.inBytesRate.name:  r.outMsgsRate.calculateRate(pollTime),
+		r.outBytesRate.name: r.outBytesRate.calculateRate(pollTime),
+	}
+}
+
+func (r rateGroup) toInfluxPoint(pollTime time.Time) (*influxdb.Point, error) {
+	name := fmt.Sprintf("%s_performance", r.name)
+	fields := r.toInfluxFields(pollTime)
+	tags := map[string]string{}
+	dateOccurred := time.Now()
+	point, err := influxdb.NewPoint(name, tags, fields, dateOccurred)
+	if err != nil {
+		return nil, err
+	}
+
+	return point, nil
+}
+
+func (r rateGroup) writeToBatchPoints(pollTime time.Time, bp influxdb.BatchPoints) error {
+	point, err := r.toInfluxPoint(pollTime)
+	if err != nil {
+		return err
+	}
+
+	bp.AddPoint(point)
+
+	return nil
+}
+
 func (r rate) calculateRate(pollTime time.Time) float64 {
 	tDelta := time.Since(pollTime)
 	return float64(r.delta) / tDelta.Seconds()
@@ -71,43 +147,37 @@ func main() {
 	}
 
 	// setting up rabbit and nats fetchers
-	n := fetcher.NewNats(natsHost, natsPort)
-	// r := fetcher.NewRabbit(rabbitHost, rabbitPort)
+	natsFetcher := fetcher.NewNats(natsHost, natsPort)
+	rabbitFetcher := fetcher.NewRabbit(rabbitHost, rabbitPort)
 
 	// ticking
 	first := true
 	pollTime := time.Now()
 	tick := time.Tick(1 * time.Second)
-	inMsgsRate := rate{name: "in_messages_rate"}
-	outMsgsRate := rate{name: "out_messages_rate"}
-	inBytesRate := rate{name: "in_bytes_rate"}
-	outBytesRate := rate{name: "out_bytes_rate"}
+	natsRateGroup := rateGroup{
+		name:         "nats",
+		inMsgsRate:   rate{name: "in_messages_rate"},
+		outMsgsRate:  rate{name: "out_messages_rate"},
+		inBytesRate:  rate{name: "in_bytes_rate"},
+		outBytesRate: rate{name: "out_bytes_rate"},
+	}
+	rabbitRateGroup := rateGroup{
+		name:         "rabbit",
+		inMsgsRate:   rate{name: "in_messages_rate"},
+		outMsgsRate:  rate{name: "out_messages_rate"},
+		inBytesRate:  rate{name: "in_bytes_rate"},
+		outBytesRate: rate{name: "out_bytes_rate"},
+	}
 	fmt.Println("Polling for stats")
 	for _ = range tick {
-		// fetching stats
-		varz, err := n.Get()
+		// populating the rates
+		natsRateGroup, err = natsRateGroup.update(natsFetcher)
 		if err != nil {
-			fmt.Printf("Could not fetch varz: %s\n", err.Error())
+			fmt.Printf("Could not update nats rate group: %s\n", err.Error())
 
 			return
 		}
-
-		// populating the rates
-		inMsgsVal := varz.InMsgs
-		inMsgsRate.delta = inMsgsVal - inMsgsRate.lastVal
-		inMsgsRate.lastVal = inMsgsVal
-
-		outMsgsVal := varz.OutMsgs
-		outMsgsRate.delta = outMsgsVal - outMsgsRate.lastVal
-		outMsgsRate.lastVal = outMsgsVal
-
-		inBytesVal := varz.InBytes
-		inBytesRate.delta = inBytesVal - inBytesRate.lastVal
-		inBytesRate.lastVal = inBytesVal
-
-		outBytesVal := varz.OutBytes
-		outBytesRate.delta = outBytesVal - outBytesRate.lastVal
-		outBytesRate.lastVal = outBytesVal
+		rabbitRateGroup, err = rabbitRateGroup.update(rabbitFetcher)
 
 		// skipping on first run
 		if first {
@@ -124,25 +194,24 @@ func main() {
 			return
 		}
 
-		// creating an influx point
-		fields := map[string]interface{}{
-			inMsgsRate.name:   inMsgsRate.calculateRate(pollTime),
-			outMsgsRate.name:  outMsgsRate.calculateRate(pollTime),
-			inBytesRate.name:  outMsgsRate.calculateRate(pollTime),
-			outBytesRate.name: outBytesRate.calculateRate(pollTime),
-		}
-		fmt.Printf("%v\n", fields)
-		point, err := influxdb.NewPoint("nats_performance", map[string]string{}, fields, time.Now())
+		// writing the rate groups onto the batch point
+		err = natsRateGroup.writeToBatchPoints(pollTime, bp)
 		if err != nil {
-			fmt.Printf("Could not create point: %s\n", err.Error())
+			fmt.Printf("Could not write to batch point: %s\n", err.Error())
+
+			return
+		}
+		err = rabbitRateGroup.writeToBatchPoints(pollTime, bp)
+		if err != nil {
+			fmt.Printf("Could not write to batch point: %s\n", err.Error())
 
 			return
 		}
 
-		// adding and writing it out
-		bp.AddPoint(point)
+		// writing out the batch-point to influx
 		ic.Write(bp)
 
+		// resetting the poll-time
 		pollTime = time.Now()
 	}
 }
