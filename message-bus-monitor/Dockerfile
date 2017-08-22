@@ -16,4 +16,4 @@ ENV APP_PROJECT message-bus-monitor
 RUN go get ./src/$APP_PROJECT/... \
   && go install $APP_PROJECT
 
-ENTRYPOINT ["./bin/message-bus-monitor", "-influx_port", "$INFLUX_PORT", "-nats_port", "$NATS_PORT", "-rabbit_port", "$RABBIT_PORT"]
+ENTRYPOINT ["./bin/message-bus-monitor"]
