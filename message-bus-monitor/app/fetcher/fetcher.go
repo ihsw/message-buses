@@ -6,7 +6,15 @@ import (
 )
 
 func defaultFetch(uri string) ([]byte, error) {
-	resp, err := http.Get(uri)
+	client := &http.Client{}
+
+	req, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		return []byte{}, err
+	}
+	req.SetBasicAuth("guest", "guest")
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return []byte{}, err
 	}
