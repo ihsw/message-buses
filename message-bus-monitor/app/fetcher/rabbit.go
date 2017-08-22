@@ -10,7 +10,9 @@ type details struct {
 }
 
 type messageStats struct {
+	Deliver        int     `json:"deliver"`
 	DeliverDetails details `json:"deliver_details"`
+	Ack            int     `json:"ack"`
 	AckDetails     details `json:"ack_details"`
 }
 
@@ -52,8 +54,8 @@ func (r Rabbit) read(body []byte) (FetchData, error) {
 	}
 
 	return FetchData{
-		InMsgs:   int64(statz.MessageStats.AckDetails.Rate),
-		OutMsgs:  int64(statz.MessageStats.DeliverDetails.Rate),
+		InMsgs:   int64(statz.MessageStats.Ack),
+		OutMsgs:  int64(statz.MessageStats.Deliver),
 		InBytes:  0,
 		OutBytes: 0,
 	}, nil

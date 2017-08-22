@@ -19,4 +19,4 @@ METRICS_HOST=$(gcloud compute instances list | grep influxdb-server | awk '{prin
 
 # building the image and running it
 gcloud compute ssh $GCLOUD_AUTH -- "cd ./message-buses && git pull && docker build -t ihsw/nats-benchmarker ./worker"
-gcloud compute ssh $GCLOUD_AUTH -- "docker run -it -e NATS_HOST=$NATS_HOST -e METRICS_HOST=$METRICS_HOST -e IS_CLUSTERING=1 -e DRIVER_TYPE=nats ihsw/nats-benchmarker ./bin/run-app nats-benchmarker -d 2m -w 1"
+gcloud compute ssh $GCLOUD_AUTH -- "docker run -it -e NATS_HOST=$NATS_HOST -e METRICS_HOST=$METRICS_HOST -e IS_CLUSTERING=1 -e DRIVER_TYPE=nats ihsw/nats-benchmarker ./bin/run-app nats-benchmarker -d 1m -w 1"
