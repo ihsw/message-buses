@@ -1,14 +1,6 @@
 {
   "__inputs": [
     {
-      "name": "DS_ECP4-TELEGRAF",
-      "label": "Ecp4-Telegraf",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "influxdb",
-      "pluginName": "InfluxDB"
-    },
-    {
       "name": "DS_ECP4",
       "label": "Ecp4",
       "description": "",
@@ -22,7 +14,7 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "4.3.0-beta1"
+      "version": "4.2.0"
     },
     {
       "type": "panel",
@@ -57,7 +49,7 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_ECP4-TELEGRAF}",
+          "datasource": "${DS_ECP4}",
           "fill": 1,
           "id": 1,
           "legend": {
@@ -175,7 +167,7 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_ECP4-TELEGRAF}",
+          "datasource": "${DS_ECP4}",
           "fill": 1,
           "id": 2,
           "legend": {
@@ -320,7 +312,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "alias": "Message Rate",
+              "alias": "NATS",
               "dsType": "influxdb",
               "groupBy": [
                 {
@@ -340,6 +332,43 @@
               "orderByTime": "ASC",
               "policy": "default",
               "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "in_messages_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            },
+            {
+              "alias": "RabbitMQ",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "1s"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "rabbit_performance",
+              "policy": "default",
+              "refId": "B",
               "resultFormat": "time_series",
               "select": [
                 [
@@ -438,7 +467,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "alias": "Transfer throughput",
+              "alias": "NATS",
               "dsType": "influxdb",
               "groupBy": [
                 {
@@ -452,6 +481,43 @@
               "orderByTime": "ASC",
               "policy": "default",
               "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "in_bytes_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      " / 1000000"
+                    ],
+                    "type": "math"
+                  }
+                ]
+              ],
+              "tags": []
+            },
+            {
+              "alias": "RabbitMQ",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "1s"
+                  ],
+                  "type": "time"
+                }
+              ],
+              "measurement": "rabbit_performance",
+              "policy": "default",
+              "refId": "B",
               "resultFormat": "time_series",
               "select": [
                 [
@@ -558,5 +624,5 @@
   },
   "timezone": "browser",
   "title": "Performance",
-  "version": 10
+  "version": 1
 }
